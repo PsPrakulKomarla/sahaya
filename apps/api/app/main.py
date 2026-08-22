@@ -6,6 +6,8 @@ from app.core.database import init_db, close_db
 from app.core.logging import configure_logging, get_logger
 from app.api.health import router as health_router
 from app.api.services import router as services_router
+from app.api.intent import router as intent_router
+from app.api.agent import router as agent_router
 from packages.services import register_default_services
 
 configure_logging()
@@ -48,6 +50,8 @@ app.add_middleware(
 
 app.include_router(health_router, prefix=settings.API_V1_PREFIX)
 app.include_router(services_router, prefix=settings.API_V1_PREFIX)
+app.include_router(intent_router, prefix=settings.API_V1_PREFIX)
+app.include_router(agent_router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/")
@@ -58,4 +62,6 @@ async def root():
         "docs": "/docs",
         "health": f"{settings.API_V1_PREFIX}/health",
         "services": f"{settings.API_V1_PREFIX}/services",
+        "intent": f"{settings.API_V1_PREFIX}/intent",
+        "agent": f"{settings.API_V1_PREFIX}/agent",
     }

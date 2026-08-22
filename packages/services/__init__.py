@@ -5,8 +5,27 @@ from packages.services.base import (
     ServiceResponse,
     ServiceError,
 )
-from packages.services.registry import ServiceRegistry, get_registry, reset_registry, ServiceResolver
+from packages.services.registry import (
+    ServiceRegistry,
+    get_registry,
+    reset_registry,
+    ServiceResolver,
+    ResolutionStatus,
+    ServiceResolution,
+    ResolutionJurisdiction,
+)
 from packages.services.adapters import MockIncomeCertificateAdapter, MockBirthCertificateAdapter
+from packages.services.intent import (
+    Intent,
+    IntentType,
+    IntentContext,
+    Language,
+    Jurisdiction,
+    LanguageDetector,
+    RuleBasedLanguageDetector,
+    IntentEngine,
+    RuleBasedIntentEngine,
+)
 
 
 def register_default_services() -> ServiceRegistry:
@@ -27,7 +46,19 @@ __all__ = [
     "get_registry",
     "reset_registry",
     "ServiceResolver",
+    "ResolutionStatus",
+    "ServiceResolution",
+    "ResolutionJurisdiction",
     "MockIncomeCertificateAdapter",
     "MockBirthCertificateAdapter",
     "register_default_services",
+    "Intent",
+    "IntentType",
+    "IntentContext",
+    "Language",
+    "Jurisdiction",
+    "LanguageDetector",
+    "RuleBasedLanguageDetector",
+    "IntentEngine",
+    "RuleBasedIntentEngine",
 ]
