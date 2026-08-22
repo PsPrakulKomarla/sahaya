@@ -1,0 +1,105 @@
+{
+  "navigation": {
+    "dashboard": "Dashboard",
+    "ai_agent": "AI Agent",
+    "apply_service": "Apply Service",
+    "update_records": "Update Records",
+    "documents": "Documents",
+    "applications": "Applications",
+    "approve": "Approve",
+    "grievances": "Grievances",
+    "settings": "Settings",
+    "govflow": "GovFlow"
+  },
+  "buttons": {
+    "send_to_govflow_ai": "Send to GovFlow AI",
+    "sending": "Sending…",
+    "new_grievance": "New Grievance",
+    "view": "View",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm_and_save": "Confirm & Save",
+    "edit": "Edit",
+    "approve_and_submit": "Approve & Submit",
+    "submitting": "Submitting…",
+    "visit": "Visit",
+    "copy": "Copy",
+    "view_application_status": "View Application Status",
+    "track_on_portal": "Track on Portal",
+    "upload": "Upload",
+    "back": "Back",
+    "continue": "Continue",
+    "submit_application": "Submit Application",
+    "download_receipt": "Download Receipt",
+    "contact_support": "Contact Support",
+    "track_application": "Track Application",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "delete_account": "Delete Account",
+    "profile": "Profile",
+    "settings_nav": "Settings",
+    "log_out": "Log out",
+    "open_menu": "Open menu",
+    "toggle_theme": "Toggle theme",
+    "change_language": "Change language",
+    "notifications": "Notifications",
+    "attach_file": "Attach file",
+    "voice_input": "Voice input",
+    "send_message": "Send message",
+    "use_voice_input": "Use voice input",
+    "upload_documents": "Upload documents by dragging files here or clicking to browse"
+  },
+  "forms": {
+    "search_services_applications": "Search services, applications…",
+    "search": "Search",
+    "language": "Language",
+    "notifications": "Notifications"
+  },
+  "status_labels": {
+    "open": "Open",
+    "in_progress": "In Progress",
+    "resolved": "Resolved",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "verified": "Verified",
+    "processing": "Processing",
+    "needs_review": "Needs Review",
+    "rejected": "Rejected"
+  },
+  "dashboard": {
+    "quick_actions": "Quick Actions",
+    "popular_services": "Popular Services",
+    "recent_applications": "Recent Applications",
+    "government_tips": "Government Tips"
+  },
+  "empty_states": {
+    "no_documents": "No documents uploaded yet. Use the upload zone above to get started."
+  },
+  "errors": {
+    "could_not_load": "Could not load"
+  },
+  "labels": {
+    "storage_used": "Storage Used",
+    "reference_number": "Reference Number",
+    "submitted_at": "Submitted",
+    "what_happens_next": "What happens next",
+    "apply_for_service": "Apply for Service",
+    "document_vault": "Document Vault",
+    "track_applications": "Track Applications",
+    "raise_grievance": "Raise Grievance",
+    "privacy_policy": "Privacy Policy",
+    "terms_of_service": "Terms of Service",
+    "security": "Security"
+  },
+  "footer": {
+    "copyright": "&copy; {year} GovFlow AI. Not affiliated with any government agency.",
+    "privacy": "Privacy",
+    "terms": "Terms of Service",
+    "security": "Security",
+    "services": "Services",
+    "languages": "Languages",
+    "legal": "Legal"
+  }
+}

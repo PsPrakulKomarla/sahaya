@@ -317,4 +317,79 @@ export async function submitApproval(
           "Your application has been submitted to the Revenue Department.",
           "You will receive an SMS confirmation within 24 hours.",
           "The certificate will be available in DigiLocker within 3-5 business days.",
-          "For queries, contact the helpdesk at 1800-110-001
+          "For queries, contact the helpdesk at 1800-110-001.",
+        ],
+      });
+    }, 1500)
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Grievance Center Mock Data
+// ---------------------------------------------------------------------------
+
+export const mockGrievanceTickets: GrievanceTicket[] = [
+  {
+    id: "GRV-2024-001",
+    applicationId: "app_01",
+    applicationService: "Income Certificate",
+    referenceNumber: "INC/2024/001847",
+    category: "delay",
+    description:
+      "It has been over 15 working days since I submitted my Income Certificate application (REF: INC/2024/001847). The status still shows 'Under Review' with no updates. I need this certificate urgently for my scholarship admission deadline.",
+    department: "Revenue Department",
+    status: "under_review",
+    createdAt: "2024-08-14T11:00:00Z",
+    updatedAt: "2024-08-14T11:00:00Z",
+    attachments: [],
+  },
+  {
+    id: "GRV-2024-002",
+    applicationId: "app_03",
+    applicationService: "Caste Certificate",
+    referenceNumber: "CASTE/2024/009521",
+    category: "incorrect_info",
+    description:
+      "My Caste Certificate was issued with my father's name misspelled as 'Sures Kumar' instead of 'Suresh Kumar'. This needs to be corrected immediately as it may cause issues with future applications.",
+    department: "Revenue Department",
+    status: "in_progress",
+    createdAt: "2024-08-10T09:30:00Z",
+    updatedAt: "2024-08-12T14:00:00Z",
+    attachments: [
+      { id: "att_01", name: "current_certificate.pdf", size: 1_048_576, type: "application/pdf" },
+    ],
+  },
+  {
+    id: "GRV-2024-003",
+    applicationId: "app_02",
+    applicationService: "Driving License (Renewal)",
+    referenceNumber: "DL/REN/2024/033210",
+    category: "technical_issue",
+    description:
+      "The portal threw an error 'Transaction Failed' after I made the payment for my Driving License renewal. The amount was debited from my bank but the application status still shows 'Payment Pending'.",
+    department: "Transport Department",
+    status: "resolved",
+    createdAt: "2024-08-05T16:45:00Z",
+    updatedAt: "2024-08-08T10:00:00Z",
+    attachments: [
+      { id: "att_02", name: "payment_screenshot.png", size: 524_288, type: "image/png" },
+      { id: "att_03", name: "bank_statement.pdf", size: 2_097_152, type: "application/pdf" },
+    ],
+  },
+];
+
+/** Placeholder mutation — simulates an API call to submit a grievance. */
+export async function submitGrievance(
+  _draft: Omit<GrievanceTicket, "id" | "status" | "createdAt" | "updatedAt">
+): Promise<GrievanceSubmitResult> {
+  return new Promise((resolve) =>
+    setTimeout(() => {
+      resolve({
+        ticketId: `GRV-2024/${String(Math.floor(Math.random() * 999)).padStart(3, "0")}`,
+        submittedAt: new Date().toISOString(),
+        message:
+          "Your grievance has been submitted. You will receive updates via SMS and email.",
+      });
+    }, 1200)
+  );
+}
