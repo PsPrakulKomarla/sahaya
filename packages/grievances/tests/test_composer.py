@@ -24,7 +24,7 @@ class TestGrievanceComposer:
             application_reference="APP123",
             service="Income Certificate",
             jurisdiction="Karnataka",
-            category_label="Application Delayed",
+            category=GrievanceCategory.APPLICATION_DELAY,
             verified_facts=[
                 GrievanceFact(type=FactType.VERIFIED_FACT, statement="Submitted on 2026-01-01")
             ],
@@ -44,7 +44,7 @@ class TestGrievanceComposer:
             application_reference=None,
             service="Passport",
             jurisdiction=None,
-            category_label="Service Unavailable",
+            category=GrievanceCategory.SERVICE_UNAVAILABLE,
         )
         assert "ref:" not in draft.subject
 
@@ -54,7 +54,7 @@ class TestGrievanceComposer:
             application_reference="APP123",
             service="Income Certificate",
             jurisdiction="Karnataka",
-            category_label="Document Issue",
+            category=GrievanceCategory.DOCUMENT_ISSUE,
             attachments=["doc1.pdf", "doc2.pdf"],
         )
         assert "doc1.pdf" in draft.attachments
@@ -90,7 +90,7 @@ class TestGrievanceComposer:
             application_reference="APP123",
             service="Income Certificate",
             jurisdiction="Karnataka",
-            category_label="Application Delayed",
+            category=GrievanceCategory.APPLICATION_DELAY,
             verified_facts=verified,
             user_claims=claims,
         )

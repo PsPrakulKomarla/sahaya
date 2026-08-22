@@ -107,8 +107,13 @@ class RuleBasedIntentEngine(IntentEngine):
             "help me",
             "ಖಾಸಗಿ",
             "ದೂರು",
+            "ಬಾಕಿ",
+            "ವಿಳಂಬ",
+            "ಶಿಕಾಯತ್",
             "शिकायत",
             "समस्या",
+            "लंबित",
+            "इंतजार",
         ],
         "ELIGIBILITY_CHECK": [
             "can i get",

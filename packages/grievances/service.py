@@ -12,6 +12,7 @@ from packages.grievances.models import (
     GrievanceStatus,
     GrievanceFact,
     FactType,
+    GrievanceTimelineEvent,
     utcnow,
     can_transition,
 )
@@ -92,7 +93,7 @@ class GrievanceService:
             application_reference=None,
             service=service_name,
             jurisdiction=jurisdiction,
-            category_label=category_def.label if category_def else category.value,
+            category=category,
             language=language,
         )
 
@@ -108,7 +109,7 @@ class GrievanceService:
             attachments=draft.attachments,
         )
         grievance.append_event(GrievanceTimelineEvent.CREATED, note="Grievance draft created")
-        self._transition(grievance, GrievanceStatus.DRAFT)
+        # Status is already DRAFT by default, no transition needed
 
         return await self._repo.save(grievance)
 
@@ -240,11 +241,14 @@ class GrievanceService:
         self,
         grievance_id: UUID,
         approval_id: str,
+        user_id: UUID,
     ) -> Grievance:
         """Record human approval (validates fingerprint)."""
         grievance = await self._repo.get(grievance_id)
         if not grievance:
             raise GrievanceNotFound(grievance_id)
+        if grievance.user_id != user_id:
+            raise GrievanceNotOwned(user_id)
 
         if grievance.status != GrievanceStatus.AWAITING_APPROVAL:
             raise InvalidStateTransition(

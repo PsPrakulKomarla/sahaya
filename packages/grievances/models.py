@@ -7,7 +7,7 @@ boundary.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from enum import StrEnum
+from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -18,7 +18,13 @@ def utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
-class GrievanceCategory(StrEnum):
+class _StrEnum(str, Enum):
+    """Backport of StrEnum for Python < 3.11."""
+    def __str__(self) -> str:
+        return self.value
+
+
+class GrievanceCategory(_StrEnum):
     APPLICATION_DELAY = "application_delay"
     APPLICATION_REJECTION = "application_rejection"
     DOCUMENT_ISSUE = "document_issue"
@@ -29,7 +35,7 @@ class GrievanceCategory(StrEnum):
     OTHER = "other"
 
 
-class GrievanceStatus(StrEnum):
+class GrievanceStatus(_StrEnum):
     DRAFT = "draft"
     PREPARING = "preparing"
     READY_FOR_REVIEW = "ready_for_review"
@@ -43,13 +49,13 @@ class GrievanceStatus(StrEnum):
     CANCELLED = "cancelled"
 
 
-class FactType(StrEnum):
+class FactType(_StrEnum):
     VERIFIED_FACT = "verified_fact"
     USER_CLAIM = "user_claim"
     INFERENCE = "inference"
 
 
-class GrievanceTimelineEvent(StrEnum):
+class GrievanceTimelineEvent(_StrEnum):
     CREATED = "grievance_created"
     DRAFT_UPDATED = "draft_updated"
     REVIEW_REQUESTED = "review_requested"
@@ -62,6 +68,7 @@ class GrievanceTimelineEvent(StrEnum):
     ACTION_REQUIRED = "action_required"
     RESOLVED = "resolved"
     FAILED = "failed"
+    CANCELLED = "cancelled"
 
 
 class GrievanceFact(BaseModel):
@@ -174,7 +181,11 @@ class Grievance(BaseModel):
 
 
 VALID_TRANSITIONS: dict[GrievanceStatus, set[GrievanceStatus]] = {
-    GrievanceStatus.DRAFT: {GrievanceStatus.PREPARING, GrievanceStatus.CANCELLED},
+    GrievanceStatus.DRAFT: {
+        GrievanceStatus.PREPARING,
+        GrievanceStatus.READY_FOR_REVIEW,
+        GrievanceStatus.CANCELLED,
+    },
     GrievanceStatus.PREPARING: {
         GrievanceStatus.READY_FOR_REVIEW,
         GrievanceStatus.DRAFT,

@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Any
 
-from packages.grievances.models import FactType, GrievanceDraft, GrievanceFact
+from packages.grievances.models import FactType, GrievanceDraft, GrievanceFact, GrievanceCategory
 
 
 class GrievanceComposer:
@@ -22,7 +22,7 @@ class GrievanceComposer:
         application_reference: str | None,
         service: str,
         jurisdiction: str | None,
-        category_label: str,
+        category: GrievanceCategory,
         verified_facts: list[GrievanceFact] | None = None,
         user_claims: list[GrievanceFact] | None = None,
         attachments: list[str] | None = None,
@@ -32,6 +32,7 @@ class GrievanceComposer:
         claims = list(user_claims or [])
         attachments = list(attachments or [])
 
+        category_label = self._get_category_label(category)
         subject = self._build_subject(category_label, application_reference, language)
         description = self._build_description(
             subject_line=subject,
@@ -50,11 +51,26 @@ class GrievanceComposer:
         return GrievanceDraft(
             subject=subject,
             description=description,
-            category_label=category_label,
+            category=category,
+            service=service,
+            jurisdiction=jurisdiction,
             application_reference=application_reference,
             facts=facts,
             attachments=attachments,
         )
+
+    def _get_category_label(self, category: GrievanceCategory) -> str:
+        labels = {
+            GrievanceCategory.APPLICATION_DELAY: "Application Delayed",
+            GrievanceCategory.APPLICATION_REJECTION: "Application Rejected",
+            GrievanceCategory.DOCUMENT_ISSUE: "Document Issue",
+            GrievanceCategory.INCORRECT_INFORMATION: "Incorrect Information",
+            GrievanceCategory.PAYMENT_ISSUE: "Payment Issue",
+            GrievanceCategory.PORTAL_PROBLEM: "Portal Problem",
+            GrievanceCategory.SERVICE_UNAVAILABLE: "Service Unavailable",
+            GrievanceCategory.OTHER: "Other",
+        }
+        return labels.get(category, category.value)
 
     def _build_subject(self, category_label: str, application_reference: str | None, language: str) -> str:
         ref = f" (ref: {application_reference})" if application_reference else ""

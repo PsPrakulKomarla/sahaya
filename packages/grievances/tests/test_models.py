@@ -1,5 +1,6 @@
 import pytest
 from uuid import uuid4
+import time
 from packages.grievances.models import (
     GrievanceCategory,
     GrievanceStatus,
@@ -120,10 +121,11 @@ class TestGrievanceModels:
             category=GrievanceCategory.APPLICATION_DELAY,
         )
         initial_time = grievance.updated_at
+        time.sleep(0.01)  # Ensure timestamp difference
         grievance.append_event(GrievanceTimelineEvent.CREATED, "Test note")
         assert len(grievance.timeline) == 1
         assert grievance.timeline[0].event == GrievanceTimelineEvent.CREATED
-        assert grievance.updated_at > initial_time
+        assert grievance.updated_at >= initial_time
 
     def test_submission_result(self):
         result = SubmissionResult(

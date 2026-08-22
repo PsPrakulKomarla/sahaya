@@ -4,7 +4,7 @@ Provides JWT-based authentication with user identity extraction.
 """
 from __future__ import annotations
 
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, Request, status
@@ -15,7 +15,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.security import decode_token
-from app.models.user import User
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 security = HTTPBearer(auto_error=False)
 
@@ -33,7 +35,7 @@ async def get_current_user(
     request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: AsyncSession = Depends(get_db),
-) -> User:
+) -> "User":
     """Extract and validate the current authenticated user from JWT token.
 
     Raises:
@@ -103,7 +105,7 @@ async def get_current_user_optional(
     request: Request,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: AsyncSession = Depends(get_db),
-) -> Optional[User]:
+) -> Optional["User"]:
     """Get current user if authenticated, otherwise return None.
 
     Useful for endpoints that work both authenticated and unauthenticated.
@@ -120,7 +122,7 @@ def require_role(*allowed_roles: str):
     Usage:
         @router.get("/admin", dependencies=[Depends(require_role("admin"))])
     """
-    async def role_checker(user: User = Depends(get_current_user)) -> User:
+    async def role_checker(user: "User" = Depends(get_current_user)) -> "User":
         if user.role not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -133,7 +135,7 @@ def require_role(*allowed_roles: str):
 
 async def verify_resource_ownership(
     resource_user_id: UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: "User" = Depends(get_current_user),
 ) -> None:
     """Verify that the current user owns the resource.
 

@@ -1,6 +1,7 @@
 import pytest
+from datetime import datetime, timedelta
 from uuid import uuid4
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock, AsyncMock
 from packages.grievances.models import (
     Grievance,
     GrievanceStatus,
@@ -78,7 +79,15 @@ class MockServiceAdapter:
 
     def metadata(self):
         class Meta:
+            service_id = self._service_id
             display_name = "Income Certificate"
+            description = "Income certificate service"
+            department = "Revenue Department"
+            jurisdiction = "Karnataka"
+            official_portal = "https://example.gov.in"
+            enabled = True
+            supported_languages = ["en", "kn", "hi"]
+            workflow_version = "1.0.0"
         return Meta()
 
     def get_capabilities(self):
@@ -269,7 +278,7 @@ class TestGrievanceService:
         # Mock approval as approved
         self.approval._approvals[approval_id]["status"] = "APPROVED"
 
-        granted = await self.service.grant_approval(grievance.id, approval_id)
+        granted = await self.service.grant_approval(grievance.id, approval_id, user_id)
         assert granted.status == GrievanceStatus.SUBMITTED
 
     @pytest.mark.asyncio
@@ -289,7 +298,7 @@ class TestGrievanceService:
         self.approval._approvals[approval_id]["status"] = "APPROVED"
 
         with pytest.raises(ApprovalInvalidated):
-            await self.service.grant_approval(grievance.id, approval_id)
+            await self.service.grant_approval(grievance.id, approval_id, user_id)
 
     @pytest.mark.asyncio
     async def test_reject_approval(self):

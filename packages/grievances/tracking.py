@@ -7,6 +7,7 @@ from packages.grievances.models import (
     Grievance,
     TrackResult,
     GrievanceStatus,
+    GrievanceTimelineEvent,
     utcnow,
 )
 from packages.grievances.status import normalize_status, STATUS_LABELS

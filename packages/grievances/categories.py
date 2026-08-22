@@ -74,7 +74,7 @@ CATEGORY_DEFINITIONS: dict[GrievanceCategory, GrievanceCategoryDefinition] = {
         label="Service Unavailable",
         description="The service is unavailable or not offered in the user's area.",
         keywords=("unavailable", "not available", "not listed", "no service", "not offered"),
-        keywords_kn=("ಲಭ್ಯವಿಲ"),
+        keywords_kn=("ಲಭ್ಯವಿಲ",),
         keywords_hi=("अनुपलब्ध", "उपलब्ध नहीं"),
     ),
     GrievanceCategory.OTHER: GrievanceCategoryDefinition(

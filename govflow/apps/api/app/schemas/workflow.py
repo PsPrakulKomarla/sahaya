@@ -1,7 +1,7 @@
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from uuid import UUID
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class WorkflowBase(BaseModel):
@@ -21,6 +21,7 @@ class WorkflowUpdate(BaseModel):
     status: Optional[str] = None
     workflow_definition: Optional[Dict[str, Any]] = None
     confidence: Optional[float] = None
+    source: Optional[str] = None
 
 
 class WorkflowRead(WorkflowBase):
@@ -31,3 +32,31 @@ class WorkflowRead(WorkflowBase):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class WorkflowExploreRequest(BaseModel):
+    service_id: UUID
+    url: str
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class WorkflowExploreResponse(BaseModel):
+    task_id: str
+    status: str
+    message: str
+
+
+class WorkflowInvalidateRequest(BaseModel):
+    reason: str
+
+
+class WorkflowStatusResponse(BaseModel):
+    workflow_id: UUID
+    status: str
+    confidence: Optional[float] = None
+    execution_count: int = 0
+    success_count: int = 0
+    failure_count: int = 0
+    recovery_count: int = 0
+    last_verified_at: Optional[datetime] = None
+    last_used_at: Optional[datetime] = None

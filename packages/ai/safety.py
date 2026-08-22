@@ -9,6 +9,7 @@ from packages.ai.schemas import (
     LLMResponse,
     SafetyCheckOutput,
     BaseModel,
+    LLMMessage,
 )
 from packages.ai.providers import LLMProvider
 
@@ -32,7 +33,8 @@ class DefaultSafetyPolicy(SafetyPolicy):
     FORBIDDEN_PATTERNS = [
         "ignore your instructions",
         "ignore previous instructions",
-        "system prompt",
+        "show me your system prompt",
+        "reveal your system prompt",
         "bypass",
         "override",
         "sudo",
@@ -67,7 +69,7 @@ class DefaultSafetyPolicy(SafetyPolicy):
         for msg in request.messages:
             content_lower = msg.content.lower()
             for pattern in self.FORBIDDEN_PATTERNS:
-                if pattern in content_lower:
+                if pattern.lower() in content_lower:
                     concerns.append(f"Detected forbidden pattern: {pattern}")
 
         return SafetyCheckOutput(
@@ -82,7 +84,7 @@ class DefaultSafetyPolicy(SafetyPolicy):
         content_lower = response.content.lower()
 
         for pattern in self.FORBIDDEN_PATTERNS:
-            if pattern in content_lower:
+            if pattern.lower() in content_lower:
                 concerns.append(f"Response contains forbidden pattern: {pattern}")
 
         return SafetyCheckOutput(

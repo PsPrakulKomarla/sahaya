@@ -1,13 +1,19 @@
 """Structured output schemas for LLM interactions."""
 from __future__ import annotations
 
-from enum import StrEnum
+from enum import Enum
 from typing import Any, Literal
 from pydantic import BaseModel, Field
 from uuid import UUID
 
 
-class IntentType(StrEnum):
+class _StrEnum(str, Enum):
+    """Backport of StrEnum for Python < 3.11."""
+    def __str__(self) -> str:
+        return self.value
+
+
+class IntentType(_StrEnum):
     SERVICE_DISCOVERY = "SERVICE_DISCOVERY"
     ELIGIBILITY_CHECK = "ELIGIBILITY_CHECK"
     DOCUMENT_REQUIREMENTS = "DOCUMENT_REQUIREMENTS"
@@ -20,7 +26,7 @@ class IntentType(StrEnum):
     CLARIFICATION_REQUIRED = "CLARIFICATION_REQUIRED"
 
 
-class Language(StrEnum):
+class Language(_StrEnum):
     ENGLISH = "en"
     KANNADA = "kn"
     HINDI = "hi"

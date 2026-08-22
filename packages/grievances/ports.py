@@ -17,19 +17,24 @@ class GrievanceRepositoryPort(ABC):
     """Persistence port for grievances."""
 
     @abstractmethod
-    async def save(self, grievance: Grievance) -> Grievance: ...
+    async def save(self, grievance: Grievance) -> Grievance:
+        pass
 
     @abstractmethod
-    async def get(self, grievance_id: UUID) -> Grievance | None: ...
+    async def get(self, grievance_id: UUID) -> Grievance | None:
+        pass
 
     @abstractmethod
-    async def find_by_user(self, user_id: UUID) -> list[Grievance]: ...
+    async def find_by_user(self, user_id: UUID) -> list[Grievance]:
+        pass
 
     @abstractmethod
-    async def find_by_application(self, application_id: UUID) -> list[Grievance]: ...
+    async def find_by_application(self, application_id: UUID) -> list[Grievance]:
+        pass
 
     @abstractmethod
-    async def delete(self, grievance_id: UUID) -> bool: ...
+    async def delete(self, grievance_id: UUID) -> bool:
+        pass
 
 
 class ApprovalPort(ABC):
@@ -42,21 +47,26 @@ class ApprovalPort(ABC):
         action_type: str,
         summary: str,
         metadata: dict[str, Any],
-    ) -> str: ...
+    ) -> str:
+        pass
 
     @abstractmethod
-    async def is_approved(self, approval_id: str) -> bool: ...
+    async def is_approved(self, approval_id: str) -> bool:
+        pass
 
     @abstractmethod
-    async def validate_approval(self, approval_id: str) -> bool: ...
+    async def validate_approval(self, approval_id: str) -> bool:
+        pass
 
 
 class ServiceAdapterPort(Protocol):
     """Minimal interface the grievance engine uses from a service adapter."""
 
-    def metadata(self) -> Any: ...
+    def metadata(self) -> Any:
+        pass
 
-    def track_application(self, reference: str) -> Any: ...
+    def track_application(self, reference: str) -> Any:
+        pass
 
 
 class GrievanceTrackingAdapter(ABC):
@@ -67,4 +77,5 @@ class GrievanceTrackingAdapter(ABC):
 
     @abstractmethod
     def track(self, reference_number: str) -> dict[str, Any]:
-        """Return ``source_status``/normalized status dict from the portal.""" ...
+        """Return ``source_status``/normalized status dict from the portal."""
+        pass

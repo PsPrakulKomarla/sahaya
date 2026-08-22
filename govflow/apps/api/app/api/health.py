@@ -103,11 +103,173 @@ async def detailed_health_check(
             "latency_ms": round((time.perf_counter() - start) * 1000, 2),
         }
 
-    if database_status == "healthy" and redis_status == "healthy":
+    # Browser health check
+    browser_status = "healthy"
+    start = time.perf_counter()
+    try:
+        # Check if Playwright is available
+        from playwright.async_api import async_playwright
+        playwright = await async_playwright().start()
+        browser = await playwright.chromium.launch(headless=True)
+        await browser.close()
+        await playwright.stop()
+        services["browser"] = {
+            "status": "healthy",
+            "latency_ms": round((time.perf_counter() - start) * 1000, 2),
+        }
+    except Exception as exc:
+        browser_status = "unhealthy"
+        logger.error("browser_health_check_failed", error=str(exc))
+        services["browser"] = {"status": "unhealthy", "error": str(exc)}
+
+    # AI health check
+    ai_status = "healthy"
+    start = time.perf_counter()
+    try:
+        # Check if AI provider is configured
+        if settings.AI_PROVIDER == "openai" and settings.OPENAI_API_KEY:
+            # Could add actual API call here
+            services["ai"] = {
+                "status": "configured",
+                "provider": "openai",
+                "latency_ms": round((time.perf_counter() - start) * 1000, 2),
+            }
+        elif settings.AI_PROVIDER == "anthropic" and settings.ANTHROPIC_API_KEY:
+            services["ai"] = {
+                "status": "configured",
+                "provider": "anthropic",
+                "latency_ms": round((time.perf_counter() - start) * 1000, 2),
+            }
+        else:
+            ai_status = "degraded"
+            services["ai"] = {
+                "status": "not_configured",
+                "provider": settings.AI_PROVIDER,
+                "latency_ms": round((time.perf_counter() - start) * 1000, 2),
+            }
+    except Exception as exc:
+        ai_status = "unhealthy"
+        logger.error("ai_health_check_failed", error=str(exc))
+        services["ai"] = {"status": "unhealthy", "error": str(exc)}
+
+    # Storage health check
+    storage_status = "healthy"
+    start = time.perf_counter()
+    try:
+        # Check if S3 is configured
+        if settings.S3_ENDPOINT and settings.S3_ACCESS_KEY and settings.S3_SECRET_KEY:
+            # Could add actual S3 connectivity check here
+            services["storage"] = {
+                "status": "configured",
+                "endpoint": settings.S3_ENDPOINT,
+                "bucket": settings.S3_BUCKET,
+                "latency_ms": round((time.perf_counter() - start) * 1000, 2),
+            }
+        else:
+            storage_status = "degraded"
+            services["storage"] = {
+                "status": "not_configured",
+                "latency_ms": round((time.perf_counter() - start) * 1000, 2),
+            }
+    except Exception as exc:
+        storage_status = "unhealthy"
+        logger.error("storage_health_check_failed", error=str(exc))
+        services["storage"] = {"status": "unhealthy", "error": str(exc)}
+
+    # Determine overall status
+    statuses = [database_status, redis_status, browser_status, ai_status, storage_status]
+    if all(s == "healthy" for s in statuses):
         overall = "healthy"
-    elif database_status == "unhealthy":
+    elif "unhealthy" in statuses:
         overall = "unhealthy"
     else:
         overall = "degraded"
 
     return {"status": overall, "services": services, **_service_info()}
+
+
+@router.get("/health/browser")
+async def browser_health_check() -> Dict[str, Any]:
+    """Browser-specific health check."""
+    start = time.perf_counter()
+    try:
+        from playwright.async_api import async_playwright
+        playwright = await async_playwright().start()
+        browser = await playwright.chromium.launch(headless=True)
+        page = await browser.new_page()
+        await page.goto("about:blank")
+        await browser.close()
+        await playwright.stop()
+        return {
+            "status": "healthy",
+            "latency_ms": round((time.perf_counter() - start) * 1000, 2),
+            **_service_info(),
+        }
+    except Exception as exc:
+        logger.error("browser_health_check_failed", error=str(exc))
+        return {
+            "status": "unhealthy",
+            "error": str(exc),
+            "latency_ms": round((time.perf_counter() - start) * 1000, 2),
+            **_service_info(),
+        }
+
+
+@router.get("/health/ai")
+async def ai_health_check() -> Dict[str, Any]:
+    """AI provider health check."""
+    start = time.perf_counter()
+    try:
+        provider = settings.AI_PROVIDER
+        configured = False
+        if provider == "openai" and settings.OPENAI_API_KEY:
+            configured = True
+        elif provider == "anthropic" and settings.ANTHROPIC_API_KEY:
+            configured = True
+        elif provider == "local" and settings.LOCAL_MODEL_PATH:
+            configured = True
+
+        return {
+            "status": "healthy" if configured else "not_configured",
+            "provider": provider,
+            "configured": configured,
+            "latency_ms": round((time.perf_counter() - start) * 1000, 2),
+            **_service_info(),
+        }
+    except Exception as exc:
+        logger.error("ai_health_check_failed", error=str(exc))
+        return {
+            "status": "unhealthy",
+            "error": str(exc),
+            "latency_ms": round((time.perf_counter() - start) * 1000, 2),
+            **_service_info(),
+        }
+
+
+@router.get("/health/storage")
+async def storage_health_check() -> Dict[str, Any]:
+    """Storage backend health check."""
+    start = time.perf_counter()
+    try:
+        if settings.S3_ENDPOINT and settings.S3_ACCESS_KEY and settings.S3_SECRET_KEY:
+            return {
+                "status": "configured",
+                "endpoint": settings.S3_ENDPOINT,
+                "bucket": settings.S3_BUCKET,
+                "latency_ms": round((time.perf_counter() - start) * 1000, 2),
+                **_service_info(),
+            }
+        else:
+            return {
+                "status": "not_configured",
+                "latency_ms": round((time.perf_counter() - start) * 1000, 2),
+                **_service_info(),
+            }
+    except Exception as exc:
+        logger.error("storage_health_check_failed", error=str(exc))
+        return {
+            "status": "unhealthy",
+            "error": str(exc),
+            "latency_ms": round((time.perf_counter() - start) * 1000, 2),
+            **_service_info(),
+        }

@@ -56,7 +56,20 @@ class TestCrossUserAccess:
 
         class MockAdapter:
             def metadata(self):
-                class M: display_name = "Test"
+                class M:
+                    service_id = "test_service"
+                    display_name = "Test Service"
+                    description = "Test service"
+                    department = "Test Department"
+                    jurisdiction = "Test"
+                    official_portal = "https://example.gov.in"
+                    enabled = True
+                    supported_languages = ["en"]
+                    workflow_version = "1.0.0"
+                    aliases = []
+                    capabilities = [ServiceCapability.RAISE_GRIEVANCE]
+                    estimated_processing_time = "1 day"
+                    fees = "Free"
                 return M()
             def get_capabilities(self):
                 return [ServiceCapability.RAISE_GRIEVANCE]
@@ -83,7 +96,7 @@ class TestCrossUserAccess:
         user1 = uuid4()
         user2 = uuid4()
 
-        grievance = await service.create_draft(user1, "test", "My issue")
+        grievance = await service.create_draft(user1, "test_service", "My issue")
         with pytest.raises(GrievanceNotOwned):
             await service.get_grievance(grievance.id, user2)
 
@@ -93,7 +106,7 @@ class TestCrossUserAccess:
         user1 = uuid4()
         user2 = uuid4()
 
-        grievance = await service.create_draft(user1, "test", "My issue")
+        grievance = await service.create_draft(user1, "test_service", "My issue")
         from packages.grievances.errors import GrievanceNotOwned
         with pytest.raises(GrievanceNotOwned):
             await service.update_draft(grievance.id, user2, subject="Hacked")
@@ -104,12 +117,12 @@ class TestCrossUserAccess:
         user1 = uuid4()
         user2 = uuid4()
 
-        grievance = await service.create_draft(user1, "test", "My issue")
+        grievance = await service.create_draft(user1, "test_service", "My issue")
         await service.prepare_for_review(grievance.id, user1)
         _, approval_id = await service.request_approval(grievance.id, user1)
 
         with pytest.raises(GrievanceNotOwned):
-            await service.grant_approval(grievance.id, approval_id)
+            await service.grant_approval(grievance.id, approval_id, user2)
 
 
 class TestApprovalInvalidation:
@@ -146,7 +159,20 @@ class TestApprovalInvalidation:
 
         class MockAdapter:
             def metadata(self):
-                class M: display_name = "Test"
+                class M:
+                    service_id = "test_service"
+                    display_name = "Test Service"
+                    description = "Test service"
+                    department = "Test Department"
+                    jurisdiction = "Test"
+                    official_portal = "https://example.gov.in"
+                    enabled = True
+                    supported_languages = ["en"]
+                    workflow_version = "1.0.0"
+                    aliases = []
+                    capabilities = [ServiceCapability.RAISE_GRIEVANCE]
+                    estimated_processing_time = "1 day"
+                    fees = "Free"
                 return M()
             def get_capabilities(self):
                 return [ServiceCapability.RAISE_GRIEVANCE]
@@ -167,7 +193,7 @@ class TestApprovalInvalidation:
         )
 
         user_id = uuid4()
-        grievance = await service.create_draft(user_id, "test", "Original issue")
+        grievance = await service.create_draft(user_id, "test_service", "Original issue")
         await service.prepare_for_review(grievance.id, user_id)
         _, approval_id = await service.request_approval(grievance.id, user_id)
 
@@ -180,7 +206,7 @@ class TestApprovalInvalidation:
 
         # Try to grant approval - should fail
         with pytest.raises(ApprovalInvalidated):
-            await service.grant_approval(grievance.id, approval_id)
+            await service.grant_approval(grievance.id, approval_id, user_id)
 
 
 class TestPromptInjectionDefense:
