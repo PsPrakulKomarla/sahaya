@@ -1,28 +1,21 @@
 import os
 import sys
-import pytest
-import uuid
-import tempfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 from packages.documents.base.models import (
-    DocumentType,
+    CrossDocumentCheckResult,
+    DocumentMatchResult,
     DocumentPipelineStatus,
-    FieldSource,
+    DocumentType,
+    DocumentValidationResult,
     ExpiryStatus,
     ExtractedField,
-    OCRResult,
+    FieldSource,
     OCRPageResult,
-    DocumentValidationResult,
+    OCRResult,
     RequiredDocumentsResult,
-    DocumentMatchResult,
-    CrossDocumentCheckResult,
 )
-from packages.documents.base.ocr_provider import OCRProvider
-from packages.documents.base.document_extractor import DocumentExtractor
-from packages.documents.base.document_validator import DocumentValidator
-from packages.documents.base.document_storage import DocumentStorage
 
 
 class TestDocumentBaseModels:

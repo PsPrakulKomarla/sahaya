@@ -1,22 +1,21 @@
-import uuid
+import asyncio
 import hashlib
-from typing import Optional, List, Dict, Any
+import os
+import uuid
 from datetime import datetime, timezone
+from typing import Any
 
-from packages.documents.base.ocr_provider import OCRProvider
+from app.core.logging import get_logger
+
 from packages.documents.base.document_extractor import DocumentExtractor
-from packages.documents.base.document_validator import DocumentValidator
 from packages.documents.base.document_storage import DocumentStorage
+from packages.documents.base.document_validator import DocumentValidator
 from packages.documents.base.models import (
     DocumentPipelineStatus,
-    OCRResult,
-    ExtractedField,
-    DocumentValidationResult,
     DocumentProcessingResult,
-    ExpiryStatus,
     FieldSource,
 )
-from app.core.logging import get_logger
+from packages.documents.base.ocr_provider import OCRProvider
 
 logger = get_logger(__name__)
 
@@ -62,9 +61,9 @@ class DocumentService:
         file_name: str,
         mime_type: str,
         file_size: int,
-    ) -> List[str]:
+    ) -> list[str]:
         """Validate file before upload. Returns list of errors (empty = valid)."""
-        errors: List[str] = []
+        errors: list[str] = []
 
         if mime_type not in ALLOWED_MIME_TYPES:
             errors.append(f"File type '{mime_type}' is not allowed. Accepted: {', '.join(ALLOWED_MIME_TYPES)}")
@@ -95,7 +94,7 @@ class DocumentService:
         mime_type: str,
         user_id: str,
         document_type: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Store a document and return document metadata."""
         errors = self.validate_file_upload(file_name, mime_type, len(file_content))
         if errors:
@@ -133,7 +132,7 @@ class DocumentService:
         storage_reference: str,
         document_type: str,
         file_name: str,
-        language: Optional[str] = None,
+        language: str | None = None,
     ) -> DocumentProcessingResult:
         """Run the full document processing pipeline.
 
@@ -148,8 +147,7 @@ class DocumentService:
             file_content = await self._storage.retrieve_authorized(storage_reference, user_id)
             temp_path = f"/tmp/{document_id}_{file_name}"
 
-            with open(temp_path, "wb") as f:
-                f.write(file_content)
+            await asyncio.to_thread(_write_temp_file, temp_path, file_content)
 
             try:
                 result.status = DocumentPipelineStatus.OCR_PROCESSING
@@ -167,9 +165,7 @@ class DocumentService:
                 validation = await self._validator.validate(extracted_fields, document_type)
                 result.validation_result = validation
 
-                if not validation.valid:
-                    result.status = DocumentPipelineStatus.NEEDS_REVIEW
-                elif ocr_result.overall_confidence < self._ocr_confidence_threshold:
+                if not validation.valid or ocr_result.overall_confidence < self._ocr_confidence_threshold:
                     result.status = DocumentPipelineStatus.NEEDS_REVIEW
                 else:
                     result.status = DocumentPipelineStatus.NEEDS_REVIEW
@@ -183,10 +179,9 @@ class DocumentService:
                 )
 
             finally:
-                if os.path.exists(temp_path):
-                    os.remove(temp_path)
+                await asyncio.to_thread(_remove_temp_file, temp_path)
 
-        except Exception as e:
+        except (RuntimeError, ValueError, OSError) as e:
             result.status = DocumentPipelineStatus.FAILED
             result.errors.append(str(e))
             logger.error("document_processing_failed", document_id=document_id, error=str(e))
@@ -197,15 +192,15 @@ class DocumentService:
         self,
         document_id: str,
         user_id: str,
-        verified_fields: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        verified_fields: dict[str, Any],
+    ) -> dict[str, Any]:
         """Verify a document after user review.
 
         User confirms or corrects extracted fields.
         """
         verified_at = datetime.now(timezone.utc)
 
-        for field_name, value in verified_fields.items():
+        for field_name in verified_fields:
             logger.info(
                 "field_verified",
                 document_id=document_id,
@@ -226,7 +221,7 @@ class DocumentService:
         document_id: str,
         user_id: str,
         reason: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Reject a document."""
         logger.info(
             "document_rejected",
@@ -243,4 +238,15 @@ class DocumentService:
         }
 
 
-import os
+def _write_temp_file(path: str, content: bytes) -> None:
+    """Write content to a temporary file (blocking I/O)."""
+    with open(path, "wb") as f:
+        f.write(content)
+
+
+def _remove_temp_file(path: str) -> None:
+    """Remove a temporary file (blocking I/O)."""
+    try:
+        os.remove(path)
+    except OSError:
+        pass

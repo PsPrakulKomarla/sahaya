@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Optional, List
+
 from packages.documents.base.models import OCRResult
 
 
@@ -11,7 +11,7 @@ class OCRProvider(ABC):
     """
 
     @abstractmethod
-    async def process(self, file_path: str, language: Optional[str] = None) -> OCRResult:
+    async def process(self, file_path: str, language: str | None = None) -> OCRResult:
         """Process a document file and extract text.
 
         Args:
@@ -21,17 +21,14 @@ class OCRProvider(ABC):
         Returns:
             OCRResult with extracted text, confidence, and metadata.
         """
-        pass
 
     @abstractmethod
-    def supported_languages(self) -> List[str]:
+    def supported_languages(self) -> list[str]:
         """Return list of supported language codes."""
-        pass
 
     @abstractmethod
     def provider_name(self) -> str:
         """Return the name of this OCR provider."""
-        pass
 
     def supports_language(self, language: str) -> bool:
         """Check if a specific language is supported."""

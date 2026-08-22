@@ -1,10 +1,10 @@
 import hashlib
-import os
 import uuid
 from pathlib import Path
-from typing import Optional
-from packages.documents.base.document_storage import DocumentStorage
+
 from app.core.logging import get_logger
+
+from packages.documents.base.document_storage import DocumentStorage
 
 logger = get_logger(__name__)
 

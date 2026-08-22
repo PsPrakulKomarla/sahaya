@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional, Dict, Any
-from packages.documents.base.models import ExtractedField, DocumentValidationResult
+from typing import Any
+
+from packages.documents.base.models import DocumentValidationResult, ExtractedField
 
 
 class DocumentValidator(ABC):
@@ -12,9 +13,9 @@ class DocumentValidator(ABC):
     @abstractmethod
     async def validate(
         self,
-        extracted_fields: List[ExtractedField],
+        extracted_fields: list[ExtractedField],
         document_type: str,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> DocumentValidationResult:
         """Validate extracted document fields.
 
@@ -26,4 +27,3 @@ class DocumentValidator(ABC):
         Returns:
             DocumentValidationResult with validity and any errors.
         """
-        pass

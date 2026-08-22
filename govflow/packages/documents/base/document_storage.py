@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Optional, BinaryIO
 
 
 class DocumentStorage(ABC):
@@ -21,7 +20,6 @@ class DocumentStorage(ABC):
         Returns:
             Storage reference string for retrieving the document.
         """
-        pass
 
     @abstractmethod
     async def retrieve_authorized(self, storage_reference: str, user_id: str) -> bytes:
@@ -38,7 +36,6 @@ class DocumentStorage(ABC):
             PermissionError: If user is not authorized.
             FileNotFoundError: If document not found.
         """
-        pass
 
     @abstractmethod
     async def delete(self, storage_reference: str, user_id: str) -> bool:
@@ -51,12 +48,10 @@ class DocumentStorage(ABC):
         Returns:
             True if deleted, False otherwise.
         """
-        pass
 
     @abstractmethod
     async def exists(self, storage_reference: str) -> bool:
         """Check if a document exists in storage."""
-        pass
 
     @abstractmethod
     async def get_signed_url(self, storage_reference: str, user_id: str, expires_in_seconds: int = 3600) -> str:
@@ -70,4 +65,3 @@ class DocumentStorage(ABC):
         Returns:
             Signed URL string.
         """
-        pass

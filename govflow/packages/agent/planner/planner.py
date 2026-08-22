@@ -1,428 +1,210 @@
-"""TaskPlanner converts intent + service resolution into a WorkflowPlan.
-
-The planner operates on generic service capabilities — it does NOT depend on
-specific service adapters (IncomeCertificate, BirthCertificate, etc.).
-"""
-from __future__ import annotations
-
-from typing import List, Optional
-
-from packages.agent.planner.models import RetryPolicy, StepType, WorkflowPlan, WorkflowStep
-from packages.agent.errors import WorkflowInvalid
+from typing import Optional, List
+from packages.agent.models.tasks import (
+    TaskType,
+    WorkflowPlan,
+    WorkflowStep,
+    StepType,
+    RetryPolicy,
+)
 from packages.services.intent.models import Intent, IntentType
-from packages.services.registry.models import ServiceResolution
+from packages.services.registry.models import ServiceResolution, ResolutionStatus
 from packages.services.base.models import ServiceCapability
 
 
+STEP_TYPE_MAP = {
+    IntentType.SERVICE_DISCOVERY: StepType.DISCOVER_SERVICE,
+    IntentType.ELIGIBILITY_CHECK: StepType.CHECK_ELIGIBILITY,
+    IntentType.DOCUMENT_REQUIREMENTS: StepType.GET_REQUIREMENTS,
+    IntentType.NEW_APPLICATION: StepType.BROWSER_EXECUTION,
+    IntentType.UPDATE_RECORD: StepType.UPDATE_RECORD,
+    IntentType.RENEWAL: StepType.RENEW,
+    IntentType.TRACK_APPLICATION: StepType.TRACK_APPLICATION,
+    IntentType.RAISE_GRIEVANCE: StepType.RAISE_GRIEVANCE,
+    IntentType.GENERAL_SERVICE_INFORMATION: StepType.DISCOVER_SERVICE,
+}
+
+CAPABILITY_STEP_MAP = {
+    ServiceCapability.DISCOVER: StepType.DISCOVER_SERVICE,
+    ServiceCapability.ELIGIBILITY_CHECK: StepType.CHECK_ELIGIBILITY,
+    ServiceCapability.DOCUMENT_REQUIREMENTS: StepType.GET_REQUIREMENTS,
+    ServiceCapability.NEW_APPLICATION: StepType.BROWSER_EXECUTION,
+    ServiceCapability.UPDATE_RECORD: StepType.UPDATE_RECORD,
+    ServiceCapability.RENEW: StepType.RENEW,
+    ServiceCapability.TRACK_APPLICATION: StepType.TRACK_APPLICATION,
+    ServiceCapability.RAISE_GRIEVANCE: StepType.RAISE_GRIEVANCE,
+}
+
+SENSITIVE_STEPS = {StepType.SUBMIT, StepType.UPDATE_RECORD, StepType.RENEW}
+
+
 class TaskPlanner:
-    """Converts structured intent + service resolution into a WorkflowPlan.
+    """Converts intent + resolution into a WorkflowPlan."""
 
-    The planner maps IntentType + ServiceCapabilities to a sequence of
-    WorkflowSteps. It does NOT contain service-specific logic.
-    """
-
-    INTENT_TO_CAPABILITY = {
-        IntentType.NEW_APPLICATION: ServiceCapability.NEW_APPLICATION,
-        IntentType.UPDATE_RECORD: ServiceCapability.UPDATE_RECORD,
-        IntentType.RENEWAL: ServiceCapability.RENEW,
-        IntentType.TRACK_APPLICATION: ServiceCapability.TRACK_APPLICATION,
-        IntentType.RAISE_GRIEVANCE: ServiceCapability.RAISE_GRIEVANCE,
-        IntentType.ELIGIBILITY_CHECK: ServiceCapability.ELIGIBILITY_CHECK,
-        IntentType.DOCUMENT_REQUIREMENTS: ServiceCapability.DOCUMENT_REQUIREMENTS,
-    }
-
-    def plan(
+    def create_plan(
         self,
         intent: Intent,
         resolution: ServiceResolution,
     ) -> WorkflowPlan:
-        """Create a WorkflowPlan from intent and service resolution.
+        if resolution.status != ResolutionStatus.RESOLVED:
+            return WorkflowPlan(
+                task_type=TaskType.OTHER,
+                service_id=resolution.service_id or "",
+                steps=[],
+            )
 
-        Args:
-            intent: The parsed user intent.
-            resolution: The resolved service information.
-
-        Returns:
-            A complete WorkflowPlan with ordered steps.
-
-        Raises:
-            WorkflowInvalid: If the intent cannot be mapped to a plan.
-        """
-        intent_type = IntentType(intent.intent) if isinstance(intent.intent, str) else intent.intent
-
-        if intent_type == IntentType.CLARIFICATION_REQUIRED:
-            raise WorkflowInvalid("Cannot plan for clarification-required intent")
-
-        if intent_type == IntentType.SERVICE_DISCOVERY:
-            return self._plan_discovery(intent, resolution)
-
-        if intent_type == IntentType.GENERAL_SERVICE_INFORMATION:
-            return self._plan_discovery(intent, resolution)
-
-        capability = self.INTENT_TO_CAPABILITY.get(intent_type)
-        if capability is None:
-            raise WorkflowInvalid(f"Unknown intent type: {intent_type}")
-
-        steps = self._build_steps_for_capability(capability, resolution)
+        task_type = self._determine_task_type(intent)
+        capabilities = self._parse_capabilities(resolution.capabilities)
+        steps = self._build_steps(task_type, capabilities, intent)
 
         return WorkflowPlan(
-            task_type=intent_type.value,
-            service_id=resolution.service_id or "unknown",
+            task_type=task_type,
+            service_id=resolution.service_id or "",
             steps=steps,
             metadata={
-                "intent_confidence": intent.confidence,
-                "resolution_confidence": resolution.confidence,
-                "jurisdiction": resolution.jurisdiction.dict() if resolution.jurisdiction else {},
+                "service_name": resolution.service_name,
+                "jurisdiction": resolution.jurisdiction.state if resolution.jurisdiction else None,
+                "workflow_version": resolution.workflow_version,
             },
         )
 
-    def _build_steps_for_capability(
-        self,
-        capability: ServiceCapability,
-        resolution: ServiceResolution,
-    ) -> List[WorkflowStep]:
-        """Build workflow steps based on the required capability."""
-        builders = {
-            ServiceCapability.NEW_APPLICATION: self._build_new_application_steps,
-            ServiceCapability.UPDATE_RECORD: self._build_update_steps,
-            ServiceCapability.RENEW: self._build_renewal_steps,
-            ServiceCapability.TRACK_APPLICATION: self._build_tracking_steps,
-            ServiceCapability.RAISE_GRIEVANCE: self._build_grievance_steps,
-            ServiceCapability.ELIGIBILITY_CHECK: self._build_eligibility_steps,
-            ServiceCapability.DOCUMENT_REQUIREMENTS: self._build_document_steps,
+    def _determine_task_type(self, intent: Intent) -> TaskType:
+        mapping = {
+            IntentType.NEW_APPLICATION: TaskType.NEW_APPLICATION,
+            IntentType.UPDATE_RECORD: TaskType.UPDATE_RECORD,
+            IntentType.RENEWAL: TaskType.RENEWAL,
+            IntentType.TRACK_APPLICATION: TaskType.TRACK_APPLICATION,
+            IntentType.RAISE_GRIEVANCE: TaskType.RAISE_GRIEVANCE,
+            IntentType.ELIGIBILITY_CHECK: TaskType.CHECK_ELIGIBILITY,
+            IntentType.SERVICE_DISCOVERY: TaskType.DISCOVER_SERVICE,
+            IntentType.DOCUMENT_REQUIREMENTS: TaskType.DISCOVER_SERVICE,
+            IntentType.GENERAL_SERVICE_INFORMATION: TaskType.DISCOVER_SERVICE,
         }
-        builder = builders.get(capability)
-        if builder:
-            return builder(resolution)
-        return self._build_generic_steps(resolution)
+        return mapping.get(intent.intent, TaskType.OTHER)
 
-    def _build_new_application_steps(self, resolution: ServiceResolution) -> List[WorkflowStep]:
-        return [
-            WorkflowStep(
+    def _parse_capabilities(self, capabilities: List[str]) -> List[ServiceCapability]:
+        result = []
+        for cap_str in capabilities:
+            try:
+                result.append(ServiceCapability(cap_str))
+            except ValueError:
+                continue
+        return result
+
+    def _build_steps(
+        self,
+        task_type: TaskType,
+        capabilities: List[ServiceCapability],
+        intent: Intent,
+    ) -> List[WorkflowStep]:
+        steps: List[WorkflowStep] = []
+
+        if ServiceCapability.DISCOVER in capabilities:
+            steps.append(WorkflowStep(
                 id="discover",
                 type=StepType.DISCOVER_SERVICE,
-                description="Locate and verify the official government portal",
-            ),
-            WorkflowStep(
+                description="Discover and verify the official government portal",
+            ))
+
+        if ServiceCapability.DOCUMENT_REQUIREMENTS in capabilities:
+            steps.append(WorkflowStep(
                 id="requirements",
                 type=StepType.GET_REQUIREMENTS,
-                description="Gather service requirements and eligibility criteria",
-                dependencies=["discover"],
-            ),
-            WorkflowStep(
+                description="Get service requirements and document checklist",
+                dependencies=["discover"] if steps else [],
+            ))
+
+        if ServiceCapability.ELIGIBILITY_CHECK in capabilities:
+            steps.append(WorkflowStep(
                 id="eligibility",
                 type=StepType.CHECK_ELIGIBILITY,
-                description="Verify user eligibility for this service",
-                dependencies=["requirements"],
-            ),
-            WorkflowStep(
-                id="documents",
-                type=StepType.VALIDATE_DOCUMENTS,
-                description="Validate and verify required documents",
-                dependencies=["eligibility"],
-            ),
-            WorkflowStep(
+                description="Check applicant eligibility for the service",
+                dependencies=["discover"] if steps else [],
+            ))
+
+        if task_type in (TaskType.NEW_APPLICATION, TaskType.UPDATE_RECORD, TaskType.RENEWAL):
+            if ServiceCapability.DOCUMENT_REQUIREMENTS in capabilities:
+                steps.append(WorkflowStep(
+                    id="validate_docs",
+                    type=StepType.VALIDATE_DOCUMENTS,
+                    description="Validate and verify required documents",
+                    dependencies=["requirements"],
+                ))
+
+            steps.append(WorkflowStep(
                 id="prepare",
                 type=StepType.PREPARE_APPLICATION,
-                description="Prepare application data from validated documents",
-                dependencies=["documents"],
-            ),
-            WorkflowStep(
-                id="browser",
-                type=StepType.BROWSER_EXECUTION,
-                description="Execute application on government portal via browser",
-                dependencies=["prepare"],
-            ),
-            WorkflowStep(
+                description="Prepare application data for submission",
+                dependencies=["validate_docs"] if any(s.id == "validate_docs" for s in steps) else ["discover"],
+            ))
+
+            if task_type in (TaskType.NEW_APPLICATION, TaskType.RENEWAL):
+                steps.append(WorkflowStep(
+                    id="browser",
+                    type=StepType.BROWSER_EXECUTION,
+                    description="Execute form filling and submission on government portal",
+                    dependencies=["prepare"],
+                    timeout_seconds=600,
+                ))
+
+            steps.append(WorkflowStep(
                 id="review",
                 type=StepType.HUMAN_REVIEW,
                 description="Review application before final submission",
-                dependencies=["browser"],
+                dependencies=["browser"] if any(s.id == "browser" for s in steps) else ["prepare"],
                 requires_approval=True,
-            ),
-            WorkflowStep(
+            ))
+
+            steps.append(WorkflowStep(
                 id="submit",
                 type=StepType.SUBMIT,
                 description="Submit the application to the government portal",
                 dependencies=["review"],
                 requires_approval=True,
                 retry_policy=RetryPolicy(max_retries=0, retryable=False),
-            ),
-            WorkflowStep(
-                id="track",
-                type=StepType.TRACK_APPLICATION,
-                description="Track application status after submission",
-                dependencies=["submit"],
-            ),
-            WorkflowStep(
-                id="complete",
-                type=StepType.COMPLETE,
-                description="Task completed successfully",
-                dependencies=["track"],
-            ),
-        ]
+            ))
 
-    def _build_update_steps(self, resolution: ServiceResolution) -> List[WorkflowStep]:
-        return [
-            WorkflowStep(
-                id="discover",
-                type=StepType.DISCOVER_SERVICE,
-                description="Locate the government portal for record updates",
-            ),
-            WorkflowStep(
-                id="requirements",
-                type=StepType.GET_REQUIREMENTS,
-                description="Determine what documents and data are needed",
-                dependencies=["discover"],
-            ),
-            WorkflowStep(
-                id="documents",
-                type=StepType.VALIDATE_DOCUMENTS,
-                description="Validate supporting documents for the update",
-                dependencies=["requirements"],
-            ),
-            WorkflowStep(
+        elif task_type == TaskType.TRACK_APPLICATION:
+            steps.append(WorkflowStep(
                 id="browser",
                 type=StepType.BROWSER_EXECUTION,
-                description="Navigate portal and perform record update",
-                dependencies=["documents"],
-            ),
-            WorkflowStep(
-                id="review",
-                type=StepType.HUMAN_REVIEW,
-                description="Review the update before submission",
-                dependencies=["browser"],
-                requires_approval=True,
-            ),
-            WorkflowStep(
-                id="submit",
-                type=StepType.SUBMIT,
-                description="Submit the record update",
-                dependencies=["review"],
-                requires_approval=True,
-                retry_policy=RetryPolicy(max_retries=0, retryable=False),
-            ),
-            WorkflowStep(
-                id="complete",
-                type=StepType.COMPLETE,
-                description="Update completed successfully",
-                dependencies=["submit"],
-            ),
-        ]
-
-    def _build_renewal_steps(self, resolution: ServiceResolution) -> List[WorkflowStep]:
-        return [
-            WorkflowStep(
-                id="discover",
-                type=StepType.DISCOVER_SERVICE,
-                description="Locate the renewal portal",
-            ),
-            WorkflowStep(
-                id="requirements",
-                type=StepType.GET_REQUIREMENTS,
-                description="Check renewal requirements and deadlines",
-                dependencies=["discover"],
-            ),
-            WorkflowStep(
-                id="eligibility",
-                type=StepType.CHECK_ELIGIBILITY,
-                description="Verify renewal eligibility",
-                dependencies=["requirements"],
-            ),
-            WorkflowStep(
-                id="documents",
-                type=StepType.VALIDATE_DOCUMENTS,
-                description="Validate documents for renewal",
-                dependencies=["eligibility"],
-            ),
-            WorkflowStep(
-                id="browser",
-                type=StepType.BROWSER_EXECUTION,
-                description="Execute renewal on government portal",
-                dependencies=["documents"],
-            ),
-            WorkflowStep(
-                id="review",
-                type=StepType.HUMAN_REVIEW,
-                description="Review renewal before submission",
-                dependencies=["browser"],
-                requires_approval=True,
-            ),
-            WorkflowStep(
-                id="submit",
-                type=StepType.SUBMIT,
-                description="Submit the renewal",
-                dependencies=["review"],
-                requires_approval=True,
-                retry_policy=RetryPolicy(max_retries=0, retryable=False),
-            ),
-            WorkflowStep(
-                id="track",
-                type=StepType.TRACK_APPLICATION,
-                description="Track renewal status after submission",
-                dependencies=["submit"],
-            ),
-            WorkflowStep(
-                id="complete",
-                type=StepType.COMPLETE,
-                description="Renewal completed successfully",
-                dependencies=["track"],
-            ),
-        ]
-
-    def _build_tracking_steps(self, resolution: ServiceResolution) -> List[WorkflowStep]:
-        return [
-            WorkflowStep(
-                id="discover",
-                type=StepType.DISCOVER_SERVICE,
-                description="Locate the tracking portal",
-            ),
-            WorkflowStep(
-                id="browser",
-                type=StepType.BROWSER_EXECUTION,
-                description="Navigate to tracking page and enter reference number",
-                dependencies=["discover"],
-            ),
-            WorkflowStep(
+                description="Navigate to portal and check application status",
+                dependencies=["discover"] if any(s.id == "discover" for s in steps) else [],
+            ))
+            steps.append(WorkflowStep(
                 id="extract",
                 type=StepType.EXTRACT_DATA,
-                description="Extract application status from the portal",
+                description="Extract application status and timeline data",
                 dependencies=["browser"],
-            ),
-            WorkflowStep(
-                id="complete",
-                type=StepType.COMPLETE,
-                description="Tracking completed",
-                dependencies=["extract"],
-            ),
-        ]
+            ))
 
-    def _build_grievance_steps(self, resolution: ServiceResolution) -> List[WorkflowStep]:
-        return [
-            WorkflowStep(
-                id="discover",
-                type=StepType.DISCOVER_SERVICE,
-                description="Locate the grievance portal",
-            ),
-            WorkflowStep(
-                id="requirements",
-                type=StepType.GET_REQUIREMENTS,
-                description="Determine grievance filing requirements",
-                dependencies=["discover"],
-            ),
-            WorkflowStep(
-                id="browser",
-                type=StepType.BROWSER_EXECUTION,
-                description="Navigate portal and file grievance",
-                dependencies=["requirements"],
-            ),
-            WorkflowStep(
+        elif task_type == TaskType.RAISE_GRIEVANCE:
+            steps.append(WorkflowStep(
+                id="prepare",
+                type=StepType.PREPARE_APPLICATION,
+                description="Prepare grievance details",
+                dependencies=["discover"] if any(s.id == "discover" for s in steps) else [],
+            ))
+            steps.append(WorkflowStep(
                 id="review",
                 type=StepType.HUMAN_REVIEW,
                 description="Review grievance before submission",
-                dependencies=["browser"],
+                dependencies=["prepare"],
                 requires_approval=True,
-            ),
-            WorkflowStep(
+            ))
+            steps.append(WorkflowStep(
                 id="submit",
                 type=StepType.SUBMIT,
                 description="Submit the grievance",
                 dependencies=["review"],
                 requires_approval=True,
                 retry_policy=RetryPolicy(max_retries=0, retryable=False),
-            ),
-            WorkflowStep(
-                id="complete",
-                type=StepType.COMPLETE,
-                description="Grievance submitted successfully",
-                dependencies=["submit"],
-            ),
-        ]
+            ))
 
-    def _build_eligibility_steps(self, resolution: ServiceResolution) -> List[WorkflowStep]:
-        return [
-            WorkflowStep(
-                id="discover",
-                type=StepType.DISCOVER_SERVICE,
-                description="Locate the eligibility information",
-            ),
-            WorkflowStep(
-                id="eligibility",
-                type=StepType.CHECK_ELIGIBILITY,
-                description="Check eligibility criteria",
-                dependencies=["discover"],
-            ),
-            WorkflowStep(
-                id="complete",
-                type=StepType.COMPLETE,
-                description="Eligibility check completed",
-                dependencies=["eligibility"],
-            ),
-        ]
+        steps.append(WorkflowStep(
+            id="complete",
+            type=StepType.COMPLETE,
+            description="Mark task as completed and record result",
+            dependencies=[s.id for s in steps if s.type != StepType.COMPLETE],
+        ))
 
-    def _build_document_steps(self, resolution: ServiceResolution) -> List[WorkflowStep]:
-        return [
-            WorkflowStep(
-                id="discover",
-                type=StepType.DISCOVER_SERVICE,
-                description="Locate document requirements",
-            ),
-            WorkflowStep(
-                id="requirements",
-                type=StepType.GET_REQUIREMENTS,
-                description="Gather document requirements",
-                dependencies=["discover"],
-            ),
-            WorkflowStep(
-                id="documents",
-                type=StepType.VALIDATE_DOCUMENTS,
-                description="Validate provided documents against requirements",
-                dependencies=["requirements"],
-            ),
-            WorkflowStep(
-                id="complete",
-                type=StepType.COMPLETE,
-                description="Document validation completed",
-                dependencies=["documents"],
-            ),
-        ]
-
-    def _build_generic_steps(self, resolution: ServiceResolution) -> List[WorkflowStep]:
-        return [
-            WorkflowStep(
-                id="discover",
-                type=StepType.DISCOVER_SERVICE,
-                description="Discover the service",
-            ),
-            WorkflowStep(
-                id="browser",
-                type=StepType.BROWSER_EXECUTION,
-                description="Execute the required browser actions",
-                dependencies=["discover"],
-            ),
-            WorkflowStep(
-                id="complete",
-                type=StepType.COMPLETE,
-                description="Task completed",
-                dependencies=["browser"],
-            ),
-        ]
-
-    def _plan_discovery(self, intent: Intent, resolution: ServiceResolution) -> WorkflowPlan:
-        return WorkflowPlan(
-            task_type=intent.intent.value if isinstance(intent.intent, IntentType) else intent.intent,
-            service_id=resolution.service_id or "unknown",
-            steps=[
-                WorkflowStep(
-                    id="discover",
-                    type=StepType.DISCOVER_SERVICE,
-                    description="Discover available services",
-                ),
-                WorkflowStep(
-                    id="complete",
-                    type=StepType.COMPLETE,
-                    description="Discovery completed",
-                    dependencies=["discover"],
-                ),
-            ],
-        )
+        return steps

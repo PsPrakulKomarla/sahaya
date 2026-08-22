@@ -1,11 +1,10 @@
-from typing import List, Optional, Dict, Any
+from app.core.logging import get_logger
+
 from packages.documents.base.models import (
     DocumentRequirementItem,
     RequiredDocumentsResult,
 )
-from packages.services.base.adapter import GovernmentServiceAdapter
 from packages.services.registry.registry import ServiceRegistry
-from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -16,7 +15,7 @@ class DocumentRequirementEngine:
     Connects the Service Adapter to the Document System.
     """
 
-    def __init__(self, registry: Optional[ServiceRegistry] = None):
+    def __init__(self, registry: ServiceRegistry | None = None):
         self._registry = registry
 
     def _get_registry(self) -> ServiceRegistry:
@@ -29,7 +28,7 @@ class DocumentRequirementEngine:
         self,
         service_id: str,
         operation: str = "new_application",
-        jurisdiction: Optional[str] = None,
+        jurisdiction: str | None = None,
     ) -> RequiredDocumentsResult:
         """Get document requirements for a service operation."""
         registry = self._get_registry()
@@ -71,7 +70,7 @@ class DocumentRequirementEngine:
                 requirements=requirements,
             )
 
-        except Exception as e:
+        except (RuntimeError, ValueError, KeyError, TypeError) as e:
             logger.error(
                 "requirement_engine_error",
                 service_id=service_id,

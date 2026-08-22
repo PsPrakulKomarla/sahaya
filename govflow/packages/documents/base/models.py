@@ -1,7 +1,8 @@
-from enum import Enum
-from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
 from datetime import datetime
+from enum import Enum
+from typing import Any
+
+from pydantic import BaseModel, Field
 
 
 class DocumentType(str, Enum):
@@ -50,9 +51,9 @@ class ExtractedField(BaseModel):
     value: Any
     confidence: float = 0.0
     source: FieldSource = FieldSource.OCR
-    ocr_value: Optional[str] = None
+    ocr_value: str | None = None
     verified: bool = False
-    verified_at: Optional[datetime] = None
+    verified_at: datetime | None = None
 
 
 class OCRBoundingBox(BaseModel):
@@ -68,24 +69,24 @@ class OCRPageResult(BaseModel):
     page_number: int
     text: str
     confidence: float
-    bounding_boxes: List[OCRBoundingBox] = Field(default_factory=list)
-    language: Optional[str] = None
+    bounding_boxes: list[OCRBoundingBox] = Field(default_factory=list)
+    language: str | None = None
 
 
 class OCRResult(BaseModel):
     extracted_text: str
-    pages: List[OCRPageResult] = Field(default_factory=list)
+    pages: list[OCRPageResult] = Field(default_factory=list)
     overall_confidence: float = 0.0
-    language: Optional[str] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    language: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class DocumentValidationResult(BaseModel):
     valid: bool
-    errors: List[str] = Field(default_factory=list)
-    warnings: List[str] = Field(default_factory=list)
-    missing_fields: List[str] = Field(default_factory=list)
-    field_formats: Dict[str, bool] = Field(default_factory=dict)
+    errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    missing_fields: list[str] = Field(default_factory=list)
+    field_formats: dict[str, bool] = Field(default_factory=dict)
 
 
 class DocumentAvailabilityResult(BaseModel):
@@ -93,7 +94,7 @@ class DocumentAvailabilityResult(BaseModel):
     display_name: str
     mandatory: bool
     available: bool
-    matching_documents: List[str] = Field(default_factory=list)
+    matching_documents: list[str] = Field(default_factory=list)
     expiry_status: ExpiryStatus = ExpiryStatus.UNKNOWN
 
 
@@ -102,36 +103,36 @@ class DocumentRequirementItem(BaseModel):
     display_name: str
     description: str = ""
     mandatory: bool = True
-    accepted_formats: List[str] = Field(default_factory=lambda: ["pdf", "jpg", "png"])
+    accepted_formats: list[str] = Field(default_factory=lambda: ["pdf", "jpg", "png"])
     max_file_size_mb: int = 5
 
 
 class RequiredDocumentsResult(BaseModel):
     service_id: str
     operation: str
-    requirements: List[DocumentRequirementItem] = Field(default_factory=list)
+    requirements: list[DocumentRequirementItem] = Field(default_factory=list)
 
 
 class DocumentMatchResult(BaseModel):
     required_type: str
     matched: bool
-    document_id: Optional[str] = None
-    document_type: Optional[str] = None
+    document_id: str | None = None
+    document_type: str | None = None
     confidence: float = 0.0
     expiry_status: ExpiryStatus = ExpiryStatus.UNKNOWN
 
 
 class CrossDocumentCheckResult(BaseModel):
     consistent: bool
-    discrepancies: List[Dict[str, Any]] = Field(default_factory=list)
-    checked_fields: List[str] = Field(default_factory=list)
+    discrepancies: list[dict[str, Any]] = Field(default_factory=list)
+    checked_fields: list[str] = Field(default_factory=list)
 
 
 class DocumentProcessingResult(BaseModel):
     document_id: str
     status: DocumentPipelineStatus
-    ocr_result: Optional[OCRResult] = None
-    extracted_fields: List[ExtractedField] = Field(default_factory=list)
-    validation_result: Optional[DocumentValidationResult] = None
+    ocr_result: OCRResult | None = None
+    extracted_fields: list[ExtractedField] = Field(default_factory=list)
+    validation_result: DocumentValidationResult | None = None
     confidence: float = 0.0
-    errors: List[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)

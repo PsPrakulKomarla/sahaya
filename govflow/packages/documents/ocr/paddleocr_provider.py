@@ -1,8 +1,9 @@
-import os
-from typing import Optional, List, Dict, Any
-from packages.documents.base.ocr_provider import OCRProvider
-from packages.documents.base.models import OCRResult, OCRPageResult, OCRBoundingBox
+from typing import Any
+
 from app.core.logging import get_logger
+
+from packages.documents.base.models import OCRBoundingBox, OCRPageResult, OCRResult
+from packages.documents.base.ocr_provider import OCRProvider
 
 logger = get_logger(__name__)
 
@@ -17,7 +18,7 @@ class PaddleOCRProvider(OCRProvider):
     MockOCRProvider can be used for development and testing.
     """
 
-    def __init__(self, languages: Optional[List[str]] = None):
+    def __init__(self, languages: list[str] | None = None):
         self._languages = languages or ["en"]
         self._engine = None
         self._initialized = False
@@ -25,7 +26,7 @@ class PaddleOCRProvider(OCRProvider):
     def provider_name(self) -> str:
         return "paddleocr"
 
-    def supported_languages(self) -> List[str]:
+    def supported_languages(self) -> list[str]:
         return self._languages
 
     def _initialize_engine(self) -> None:
@@ -46,11 +47,11 @@ class PaddleOCRProvider(OCRProvider):
                 message="PaddleOCR is not installed. Use 'pip install paddleocr' to enable.",
             )
             self._initialized = True
-        except Exception as e:
+        except (RuntimeError, OSError) as e:
             logger.error("paddleocr_init_failed", error=str(e))
             self._initialized = True
 
-    async def process(self, file_path: str, language: Optional[str] = None) -> OCRResult:
+    async def process(self, file_path: str, language: str | None = None) -> OCRResult:
         """Process a document using PaddleOCR."""
         self._initialize_engine()
 
@@ -63,15 +64,15 @@ class PaddleOCRProvider(OCRProvider):
         try:
             result = self._engine.ocr(file_path, cls=True)
             return self._parse_result(result, language)
-        except Exception as e:
+        except (RuntimeError, OSError, ValueError) as e:
             logger.error("paddleocr_processing_failed", file_path=file_path, error=str(e))
             raise
 
-    def _parse_result(self, raw_result: Any, language: Optional[str] = None) -> OCRResult:
+    def _parse_result(self, raw_result: Any, language: str | None = None) -> OCRResult:
         """Parse PaddleOCR raw output into OCRResult."""
-        pages: List[OCRPageResult] = []
-        all_text_parts: List[str] = []
-        all_confidences: List[float] = []
+        pages: list[OCRPageResult] = []
+        all_text_parts: list[str] = []
+        all_confidences: list[float] = []
 
         if not raw_result:
             return OCRResult(
@@ -85,9 +86,9 @@ class PaddleOCRProvider(OCRProvider):
             if not page_result:
                 continue
 
-            page_text_parts: List[str] = []
-            page_confidences: List[float] = []
-            bounding_boxes: List[OCRBoundingBox] = []
+            page_text_parts: list[str] = []
+            page_confidences: list[float] = []
+            bounding_boxes: list[OCRBoundingBox] = []
 
             for line in page_result:
                 if len(line) >= 2:

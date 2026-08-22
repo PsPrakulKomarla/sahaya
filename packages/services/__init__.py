@@ -25,7 +25,14 @@ from packages.services.intent import (
     RuleBasedLanguageDetector,
     IntentEngine,
     RuleBasedIntentEngine,
+    LanguageService,
+    TranslationProvider,
+    RuleBasedTranslationProvider,
+    LLMTranslationProvider,
+    TranslationResult,
 )
+from packages.services.clarification import ClarificationEngine
+from packages.services.conversation import ConversationContext
 
 
 def register_default_services() -> ServiceRegistry:
@@ -61,4 +68,11 @@ __all__ = [
     "RuleBasedLanguageDetector",
     "IntentEngine",
     "RuleBasedIntentEngine",
+    "LanguageService",
+    "TranslationProvider",
+    "RuleBasedTranslationProvider",
+    "LLMTranslationProvider",
+    "TranslationResult",
+    "ClarificationEngine",
+    "ConversationContext",
 ]

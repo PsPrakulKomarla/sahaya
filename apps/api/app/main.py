@@ -8,6 +8,9 @@ from app.api.health import router as health_router
 from app.api.services import router as services_router
 from app.api.intent import router as intent_router
 from app.api.agent import router as agent_router
+from app.api.grievances import router as grievances_router
+from app.api.language import router as language_router
+from app.api.ai import router as ai_router
 from packages.services import register_default_services
 
 configure_logging()
@@ -52,6 +55,9 @@ app.include_router(health_router, prefix=settings.API_V1_PREFIX)
 app.include_router(services_router, prefix=settings.API_V1_PREFIX)
 app.include_router(intent_router, prefix=settings.API_V1_PREFIX)
 app.include_router(agent_router, prefix=settings.API_V1_PREFIX)
+app.include_router(grievances_router, prefix=settings.API_V1_PREFIX)
+app.include_router(language_router, prefix=settings.API_V1_PREFIX)
+app.include_router(ai_router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/")
@@ -64,4 +70,7 @@ async def root():
         "services": f"{settings.API_V1_PREFIX}/services",
         "intent": f"{settings.API_V1_PREFIX}/intent",
         "agent": f"{settings.API_V1_PREFIX}/agent",
+        "grievances": f"{settings.API_V1_PREFIX}/grievances",
+        "language": f"{settings.API_V1_PREFIX}/language",
+        "ai": f"{settings.API_V1_PREFIX}/ai",
     }

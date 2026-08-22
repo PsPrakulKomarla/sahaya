@@ -1,21 +1,17 @@
-from packages.browser.interfaces.agent import BrowserAgent, BrowserConfig, BrowserResult
+from packages.browser.interfaces.agent import BrowserAgent
 from packages.browser.interfaces.models import (
-    PageModel,
-    SemanticElement,
-    ElementType,
+    BrowserAction,
     BrowserActionType,
-    BrowserEvent,
-    BrowserEventType,
+    BrowserActionResult,
+    ElementTarget,
+    PageInfo,
 )
 
 __all__ = [
     "BrowserAgent",
-    "BrowserConfig",
-    "BrowserResult",
-    "PageModel",
-    "SemanticElement",
-    "ElementType",
+    "BrowserAction",
     "BrowserActionType",
-    "BrowserEvent",
-    "BrowserEventType",
+    "BrowserActionResult",
+    "ElementTarget",
+    "PageInfo",
 ]

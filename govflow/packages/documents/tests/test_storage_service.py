@@ -1,15 +1,16 @@
 import os
 import sys
-import pytest
-import uuid
 import tempfile
+import uuid
+
+import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from packages.documents.storage.filesystem_storage import FilesystemStorage
 from packages.documents.document_service import DocumentService
-from packages.documents.ocr.mock_provider import MockOCRProvider
 from packages.documents.extraction.extractor import DefaultDocumentExtractor
+from packages.documents.ocr.mock_provider import MockOCRProvider
+from packages.documents.storage.filesystem_storage import FilesystemStorage
 from packages.documents.validation.validator import DefaultDocumentValidator
 
 

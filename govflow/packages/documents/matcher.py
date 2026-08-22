@@ -1,13 +1,15 @@
-from typing import List, Optional, Dict, Any
 from datetime import datetime, timezone
+from typing import Any, ClassVar
+
+from app.core.logging import get_logger
+
 from packages.documents.base.models import (
-    DocumentMatchResult,
-    DocumentAvailabilityResult,
-    ExpiryStatus,
     CrossDocumentCheckResult,
+    DocumentAvailabilityResult,
+    DocumentMatchResult,
+    ExpiryStatus,
     ExtractedField,
 )
-from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -15,7 +17,7 @@ logger = get_logger(__name__)
 class DocumentMatcher:
     """Matches required document types against user's document collection."""
 
-    DOCUMENT_TYPE_COMPATIBILITY: Dict[str, List[str]] = {
+    DOCUMENT_TYPE_COMPATIBILITY: ClassVar[dict[str, list[str]]] = {
         "identity_proof": ["aadhaar", "pan", "passport", "driving_license"],
         "address_proof": ["aadhaar", "address_proof"],
         "income_proof": ["income_proof"],
@@ -28,14 +30,14 @@ class DocumentMatcher:
     def match_documents(
         self,
         required_type: str,
-        user_documents: List[Dict[str, Any]],
+        user_documents: list[dict[str, Any]],
     ) -> DocumentMatchResult:
         """Match a required document type against user's documents."""
         compatible_types = self.DOCUMENT_TYPE_COMPATIBILITY.get(
             required_type, [required_type]
         )
 
-        best_match: Optional[Dict[str, Any]] = None
+        best_match: dict[str, Any] | None = None
         best_score = 0.0
 
         for doc in user_documents:
@@ -81,11 +83,11 @@ class DocumentMatcher:
 
     def check_availability(
         self,
-        required_documents: List[Dict[str, Any]],
-        user_documents: List[Dict[str, Any]],
-    ) -> List[DocumentAvailabilityResult]:
+        required_documents: list[dict[str, Any]],
+        user_documents: list[dict[str, Any]],
+    ) -> list[DocumentAvailabilityResult]:
         """Check which required documents are available."""
-        results: List[DocumentAvailabilityResult] = []
+        results: list[DocumentAvailabilityResult] = []
 
         for req in required_documents:
             req_type = req.get("document_type", "")
@@ -107,7 +109,7 @@ class DocumentMatcher:
 
         return results
 
-    def _check_expiry(self, document: Dict[str, Any]) -> ExpiryStatus:
+    def _check_expiry(self, document: dict[str, Any]) -> ExpiryStatus:
         """Check document expiry status."""
         expires_at = document.get("expires_at")
         if not expires_at:
@@ -133,10 +135,10 @@ class DocumentMatcher:
 
     def check_cross_document_consistency(
         self,
-        documents_fields: List[List[ExtractedField]],
+        documents_fields: list[list[ExtractedField]],
     ) -> CrossDocumentCheckResult:
         """Check consistency of fields across multiple documents."""
-        field_values: Dict[str, List[str]] = {}
+        field_values: dict[str, list[str]] = {}
 
         for doc_fields in documents_fields:
             for field in doc_fields:
@@ -145,13 +147,13 @@ class DocumentMatcher:
                         field_values[field.field] = []
                     field_values[field.field].append(str(field.value))
 
-        discrepancies: List[Dict[str, Any]] = []
-        checked_fields: List[str] = []
+        discrepancies: list[dict[str, Any]] = []
+        checked_fields: list[str] = []
 
         for field_name, values in field_values.items():
             if len(values) > 1:
                 checked_fields.append(field_name)
-                unique_values = list(set(v.strip().lower() for v in values))
+                unique_values = {v.strip().lower() for v in values}
                 if len(unique_values) > 1:
                     discrepancies.append(
                         {

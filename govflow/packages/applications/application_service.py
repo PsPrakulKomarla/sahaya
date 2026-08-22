@@ -1,14 +1,14 @@
 import uuid
-from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
+from typing import Any
 
-from packages.applications.tracking_adapter import TrackingAdapter
-from packages.services.registry.registry import ServiceRegistry
 from app.core.logging import get_logger
+
+from packages.services.registry.registry import ServiceRegistry
 
 logger = get_logger(__name__)
 
-STATUS_NORMALIZATION: Dict[str, str] = {
+STATUS_NORMALIZATION: dict[str, str] = {
     "submitted": "submitted",
     "under_review": "processing",
     "processing": "processing",
@@ -31,7 +31,7 @@ STATUS_NORMALIZATION: Dict[str, str] = {
 class ApplicationService:
     """Manages application lifecycle: create, update, validate, review, submit."""
 
-    def __init__(self, registry: Optional[ServiceRegistry] = None):
+    def __init__(self, registry: ServiceRegistry | None = None):
         self._registry = registry
 
     def _get_registry(self) -> ServiceRegistry:
@@ -44,10 +44,10 @@ class ApplicationService:
         self,
         user_id: str,
         service_id: str,
-        form_data: Optional[Dict[str, Any]] = None,
-        document_ids: Optional[List[str]] = None,
-        jurisdiction: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        form_data: dict[str, Any] | None = None,
+        document_ids: list[str] | None = None,
+        jurisdiction: str | None = None,
+    ) -> dict[str, Any]:
         application_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc).isoformat()
         logger.info("application_created", application_id=application_id, user_id=user_id, service_id=service_id)
@@ -65,11 +65,11 @@ class ApplicationService:
 
     def update_draft(
         self,
-        application: Dict[str, Any],
-        form_data: Optional[Dict[str, Any]] = None,
-        document_ids: Optional[List[str]] = None,
-        approval_id: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        application: dict[str, Any],
+        form_data: dict[str, Any] | None = None,
+        document_ids: list[str] | None = None,
+        approval_id: str | None = None,
+    ) -> dict[str, Any]:
         has_changes = self._has_material_changes(application, form_data, document_ids)
 
         if form_data is not None:
@@ -87,9 +87,9 @@ class ApplicationService:
 
     def _has_material_changes(
         self,
-        application: Dict[str, Any],
-        new_form_data: Optional[Dict[str, Any]],
-        new_document_ids: Optional[List[str]],
+        application: dict[str, Any],
+        new_form_data: dict[str, Any] | None,
+        new_document_ids: list[str] | None,
     ) -> bool:
         if new_form_data is not None:
             old_data = application.get("form_data", {})
@@ -98,16 +98,16 @@ class ApplicationService:
                 if old_data.get(key) != new_form_data.get(key):
                     return True
         if new_document_ids is not None:
-            old_docs = set(str(d) for d in application.get("document_ids", []))
-            new_docs = set(str(d) for d in new_document_ids)
+            old_docs = {str(d) for d in application.get("document_ids", [])}
+            new_docs = {str(d) for d in new_document_ids}
             if old_docs != new_docs:
                 return True
         return False
 
-    def validate_draft(self, application: Dict[str, Any]) -> Dict[str, Any]:
-        errors: List[str] = []
-        warnings: List[str] = []
-        missing_fields: List[str] = []
+    def validate_draft(self, application: dict[str, Any]) -> dict[str, Any]:
+        errors: list[str] = []
+        warnings: list[str] = []
+        missing_fields: list[str] = []
         form_data = application.get("form_data", {})
         document_ids = application.get("document_ids", [])
 
@@ -124,14 +124,14 @@ class ApplicationService:
 
         return {"valid": len(errors) == 0, "errors": errors, "warnings": warnings, "missing_fields": missing_fields}
 
-    def _get_required_fields(self, service_id: str) -> List[str]:
+    def _get_required_fields(self, service_id: str) -> list[str]:
         required = {
             "income_certificate": ["applicant_name", "address"],
             "birth_certificate": ["child_name", "date_of_birth"],
         }
         return required.get(service_id, [])
 
-    def mark_ready_for_review(self, application: Dict[str, Any]) -> Dict[str, Any]:
+    def mark_ready_for_review(self, application: dict[str, Any]) -> dict[str, Any]:
         validation = self.validate_draft(application)
         if not validation["valid"]:
             return {"success": False, "application": application, "validation": validation}
@@ -139,12 +139,12 @@ class ApplicationService:
         application["updated_at"] = datetime.now(timezone.utc).isoformat()
         return {"success": True, "application": application}
 
-    def mark_awaiting_approval(self, application: Dict[str, Any]) -> Dict[str, Any]:
+    def mark_awaiting_approval(self, application: dict[str, Any]) -> dict[str, Any]:
         application["status"] = "awaiting_approval"
         application["updated_at"] = datetime.now(timezone.utc).isoformat()
         return application
 
-    async def submit(self, application: Dict[str, Any], approval_id: Optional[str] = None) -> Dict[str, Any]:
+    async def submit(self, application: dict[str, Any], approval_id: str | None = None) -> dict[str, Any]:
         if application.get("status") != "awaiting_approval":
             return {"success": False, "error": "Application must be in awaiting_approval status before submission"}
         if application.get("approval_invalidated"):
@@ -178,7 +178,7 @@ class ApplicationService:
             else:
                 application["status"] = "failed"
                 return {"success": False, "error": result.error.message if result.error else "Submission failed", "application": application}
-        except Exception as e:
+        except (RuntimeError, ValueError, KeyError, TypeError) as e:  # Broad catch for external service
             logger.error("submission_error", application_id=application.get("id"), error=str(e))
             application["status"] = "failed"
             return {"success": False, "error": str(e), "application": application}
@@ -187,9 +187,9 @@ class ApplicationService:
         self,
         application_id: str,
         event_type: str,
-        status: Optional[str] = None,
-        note: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        status: str | None = None,
+        note: str | None = None,
+    ) -> dict[str, Any]:
         return {
             "id": str(uuid.uuid4()),
             "application_id": application_id,
@@ -199,5 +199,5 @@ class ApplicationService:
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
-    def get_timeline(self, events: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def get_timeline(self, events: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return sorted(events, key=lambda e: e.get("timestamp", ""))

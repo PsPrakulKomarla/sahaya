@@ -1,17 +1,18 @@
 import os
 import sys
-import pytest
-import uuid
 import tempfile
+import uuid
+
+import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from packages.documents.document_service import DocumentService
-from packages.documents.ocr.mock_provider import MockOCRProvider
-from packages.documents.extraction.extractor import DefaultDocumentExtractor
-from packages.documents.validation.validator import DefaultDocumentValidator
-from packages.documents.storage.filesystem_storage import FilesystemStorage
 from packages.applications.application_service import ApplicationService
+from packages.documents.document_service import DocumentService
+from packages.documents.extraction.extractor import DefaultDocumentExtractor
+from packages.documents.ocr.mock_provider import MockOCRProvider
+from packages.documents.storage.filesystem_storage import FilesystemStorage
+from packages.documents.validation.validator import DefaultDocumentValidator
 
 
 class TestDocumentSecurity:
@@ -160,8 +161,8 @@ class TestOCRInjectionDefense:
 
     @pytest.mark.asyncio
     async def test_ocr_prompt_injection_in_name(self):
-        from packages.documents.extraction.extractor import DefaultDocumentExtractor
         from packages.documents.base.models import OCRResult
+        from packages.documents.extraction.extractor import DefaultDocumentExtractor
 
         extractor = DefaultDocumentExtractor()
         ocr_result = OCRResult(
@@ -175,8 +176,8 @@ class TestOCRInjectionDefense:
 
     @pytest.mark.asyncio
     async def test_ocr_injection_does_not_execute(self):
-        from packages.documents.extraction.extractor import DefaultDocumentExtractor
         from packages.documents.base.models import OCRResult
+        from packages.documents.extraction.extractor import DefaultDocumentExtractor
 
         extractor = DefaultDocumentExtractor()
         malicious_text = (

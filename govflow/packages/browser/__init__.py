@@ -1,21 +1,12 @@
-from packages.browser.interfaces.agent import BrowserAgent, BrowserConfig, BrowserResult
-from packages.browser.interfaces.models import (
-    PageModel,
-    SemanticElement,
-    ElementType,
-    BrowserActionType,
-    BrowserEvent,
-    BrowserEventType,
-)
+from packages.browser.interfaces import BrowserAgent, BrowserAction, BrowserActionType, BrowserActionResult, ElementTarget, PageInfo
+from packages.browser.mock import MockBrowserAgent
 
 __all__ = [
     "BrowserAgent",
-    "BrowserConfig",
-    "BrowserResult",
-    "PageModel",
-    "SemanticElement",
-    "ElementType",
+    "BrowserAction",
     "BrowserActionType",
-    "BrowserEvent",
-    "BrowserEventType",
+    "BrowserActionResult",
+    "ElementTarget",
+    "PageInfo",
+    "MockBrowserAgent",
 ]

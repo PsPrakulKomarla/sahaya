@@ -1,11 +1,12 @@
 import os
 import sys
+
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from packages.documents.base.ocr_provider import OCRProvider
 from packages.documents.base.models import OCRResult
+from packages.documents.base.ocr_provider import OCRProvider
 from packages.documents.ocr.mock_provider import MockOCRProvider
 
 

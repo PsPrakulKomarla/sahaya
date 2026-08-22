@@ -1,22 +1,17 @@
-import uuid
-from typing import Optional, List, Dict, Any
-from datetime import datetime, timezone
+from typing import Any
+
+from app.core.logging import get_logger
 
 from packages.documents.base.models import (
-    RequiredDocumentsResult,
-    DocumentMatchResult,
-    DocumentAvailabilityResult,
-    CrossDocumentCheckResult,
     ExtractedField,
 )
-from packages.documents.requirement_engine import DocumentRequirementEngine
 from packages.documents.matcher import DocumentMatcher
+from packages.documents.requirement_engine import DocumentRequirementEngine
 from packages.services.registry.registry import ServiceRegistry
-from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
-FORM_FIELD_MAPPING: Dict[str, Dict[str, str]] = {
+FORM_FIELD_MAPPING: dict[str, dict[str, str]] = {
     "income_certificate": {
         "applicant_name": "name",
         "date_of_birth": "date_of_birth",
@@ -38,9 +33,9 @@ class ApplicationPreparationService:
 
     def __init__(
         self,
-        requirement_engine: Optional[DocumentRequirementEngine] = None,
-        document_matcher: Optional[DocumentMatcher] = None,
-        registry: Optional[ServiceRegistry] = None,
+        requirement_engine: DocumentRequirementEngine | None = None,
+        document_matcher: DocumentMatcher | None = None,
+        registry: ServiceRegistry | None = None,
     ):
         self._requirement_engine = requirement_engine or DocumentRequirementEngine()
         self._document_matcher = document_matcher or DocumentMatcher()
@@ -50,11 +45,11 @@ class ApplicationPreparationService:
         self,
         service_id: str,
         user_id: str,
-        user_data: Dict[str, Any],
-        user_documents: List[Dict[str, Any]],
-        document_extracted_fields: Dict[str, List[ExtractedField]],
-        jurisdiction: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        user_data: dict[str, Any],
+        user_documents: list[dict[str, Any]],
+        document_extracted_fields: dict[str, list[ExtractedField]],
+        jurisdiction: str | None = None,
+    ) -> dict[str, Any]:
         """Prepare an application draft."""
         requirements = await self._requirement_engine.get_requirements(
             service_id, "new_application", jurisdiction
@@ -88,7 +83,7 @@ class ApplicationPreparationService:
 
         form_data = self._build_form_data(service_id, user_data, document_extracted_fields)
 
-        all_fields: List[ExtractedField] = []
+        all_fields: list[ExtractedField] = []
         for fields in document_extracted_fields.values():
             all_fields.extend(fields)
 
@@ -127,19 +122,18 @@ class ApplicationPreparationService:
     def _build_form_data(
         self,
         service_id: str,
-        user_data: Dict[str, Any],
-        document_extracted_fields: Dict[str, List[ExtractedField]],
-    ) -> Dict[str, Any]:
+        user_data: dict[str, Any],
+        document_extracted_fields: dict[str, list[ExtractedField]],
+    ) -> dict[str, Any]:
         """Build form data by mapping document fields to application fields."""
         mapping = FORM_FIELD_MAPPING.get(service_id, {})
-        form_data: Dict[str, Any] = {}
+        form_data: dict[str, Any] = {}
 
-        all_extracted: Dict[str, Any] = {}
-        for doc_type, fields in document_extracted_fields.items():
+        all_extracted: dict[str, Any] = {}
+        for fields in document_extracted_fields.values():
             for field in fields:
-                if field.value and (field.verified or field.confidence > 0.7):
-                    if field.field not in all_extracted:
-                        all_extracted[field.field] = field.value
+                if field.value and (field.verified or field.confidence > 0.7) and field.field not in all_extracted:
+                    all_extracted[field.field] = field.value
 
         for app_field, source_field in mapping.items():
             if source_field in all_extracted:
@@ -154,8 +148,8 @@ class ApplicationPreparationService:
         return form_data
 
     def _find_missing_fields(
-        self, form_data: Dict[str, Any], service_id: str
-    ) -> List[str]:
+        self, form_data: dict[str, Any], service_id: str
+    ) -> list[str]:
         """Find required fields that are missing from form data."""
         required_fields = {
             "income_certificate": ["applicant_name", "address", "annual_income"],

@@ -6,6 +6,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.health import router as health_router
+from app.api.services import router as services_router
+from app.api.documents import router as documents_router
+from app.api.applications import router as applications_router
+from app.api.tracking import router as tracking_router
 from app.core.config import settings
 from app.core.database import close_db, init_db
 from app.core.logging import configure_logging, get_logger
@@ -22,8 +26,6 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         await init_db()
         logger.info("database_initialized")
     except Exception as exc:
-        # The API must still start (and report health) when PostgreSQL is
-        # unavailable; alembic remains the schema source of truth.
         logger.error("database_initialization_failed", error=str(exc))
     yield
     logger.info("application_shutting_down")
@@ -51,6 +53,10 @@ app.add_middleware(
 
 app.include_router(health_router, prefix=settings.API_V1_PREFIX)
 app.include_router(health_router)
+app.include_router(services_router, prefix=settings.API_V1_PREFIX)
+app.include_router(documents_router, prefix=settings.API_V1_PREFIX)
+app.include_router(applications_router, prefix=settings.API_V1_PREFIX)
+app.include_router(tracking_router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/")

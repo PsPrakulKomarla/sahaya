@@ -1,13 +1,13 @@
 import os
 import sys
+
 import pytest
-import uuid
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
+from packages.documents.base.models import ExpiryStatus, ExtractedField
 from packages.documents.matcher import DocumentMatcher
 from packages.documents.requirement_engine import DocumentRequirementEngine
-from packages.documents.base.models import ExtractedField, FieldSource, ExpiryStatus
 
 
 class TestDocumentMatcher:
@@ -83,8 +83,10 @@ class TestDocumentMatcher:
 class TestDocumentRequirementEngine:
     @pytest.mark.asyncio
     async def test_get_requirements_income_certificate(self):
+        from packages.services.adapters.income_certificate.adapter import (
+            MockIncomeCertificateAdapter,
+        )
         from packages.services.registry.registry import ServiceRegistry
-        from packages.services.adapters.income_certificate.adapter import MockIncomeCertificateAdapter
 
         registry = ServiceRegistry()
         registry.register_service(MockIncomeCertificateAdapter())

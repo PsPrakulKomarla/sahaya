@@ -7,6 +7,13 @@ from packages.services.intent.models import (
 )
 from packages.services.intent.language import LanguageDetector, RuleBasedLanguageDetector
 from packages.services.intent.engine import IntentEngine, RuleBasedIntentEngine
+from packages.services.intent.language_service import (
+    LanguageService,
+    TranslationProvider,
+    RuleBasedTranslationProvider,
+    LLMTranslationProvider,
+    TranslationResult,
+)
 
 __all__ = [
     "Intent",
@@ -18,4 +25,9 @@ __all__ = [
     "RuleBasedLanguageDetector",
     "IntentEngine",
     "RuleBasedIntentEngine",
+    "LanguageService",
+    "TranslationProvider",
+    "RuleBasedTranslationProvider",
+    "LLMTranslationProvider",
+    "TranslationResult",
 ]

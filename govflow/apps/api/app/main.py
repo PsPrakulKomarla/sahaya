@@ -1,36 +1,33 @@
-from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Any
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from app.core.config import settings
+from app.core.database import init_db, close_db
+from app.core.logging import configure_logging, get_logger
 from app.api.health import router as health_router
 from app.api.services import router as services_router
-from app.api.documents import router as documents_router
-from app.api.applications import router as applications_router
-from app.api.tracking import router as tracking_router
-from app.core.config import settings
-from app.core.database import close_db, init_db
-from app.core.logging import configure_logging, get_logger
-from app.core.redis import close_redis
+from app.api.intent import router as intent_router
+from app.api.agent import router as agent_router
+from packages.services import register_default_services
 
 configure_logging()
 logger = get_logger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+async def lifespan(app: FastAPI):
     logger.info("application_starting", version=settings.APP_VERSION)
-    try:
-        await init_db()
-        logger.info("database_initialized")
-    except Exception as exc:
-        logger.error("database_initialization_failed", error=str(exc))
+
+    register_default_services()
+    logger.info("services_registered")
+
+    await init_db()
+    logger.info("database_initialized")
+
     yield
+
     logger.info("application_shutting_down")
     await close_db()
-    await close_redis()
     logger.info("database_closed")
 
 
@@ -52,18 +49,19 @@ app.add_middleware(
 )
 
 app.include_router(health_router, prefix=settings.API_V1_PREFIX)
-app.include_router(health_router)
 app.include_router(services_router, prefix=settings.API_V1_PREFIX)
-app.include_router(documents_router, prefix=settings.API_V1_PREFIX)
-app.include_router(applications_router, prefix=settings.API_V1_PREFIX)
-app.include_router(tracking_router, prefix=settings.API_V1_PREFIX)
+app.include_router(intent_router, prefix=settings.API_V1_PREFIX)
+app.include_router(agent_router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/")
-async def root() -> dict[str, Any]:
+async def root():
     return {
         "name": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "docs": "/docs",
         "health": f"{settings.API_V1_PREFIX}/health",
+        "services": f"{settings.API_V1_PREFIX}/services",
+        "intent": f"{settings.API_V1_PREFIX}/intent",
+        "agent": f"{settings.API_V1_PREFIX}/agent",
     }

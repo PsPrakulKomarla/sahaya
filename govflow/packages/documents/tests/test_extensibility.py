@@ -1,17 +1,23 @@
 import os
 import sys
+
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
+from packages.documents.base.models import OCRPageResult, OCRResult
 from packages.documents.base.ocr_provider import OCRProvider
-from packages.documents.base.models import OCRResult, OCRPageResult
 from packages.documents.document_service import DocumentService
 from packages.documents.extraction.extractor import DefaultDocumentExtractor
-from packages.documents.validation.validator import DefaultDocumentValidator
 from packages.documents.storage.filesystem_storage import FilesystemStorage
+from packages.documents.validation.validator import DefaultDocumentValidator
 from packages.services.base.adapter import GovernmentServiceAdapter
-from packages.services.base.models import ServiceMetadata, ServiceCapability, ServiceResponse, DocumentRequirement
+from packages.services.base.models import (
+    DocumentRequirement,
+    ServiceCapability,
+    ServiceMetadata,
+    ServiceResponse,
+)
 
 
 class TestOCRExtensibility:
@@ -133,8 +139,8 @@ class TestServiceExtensibility:
 
     @pytest.mark.asyncio
     async def test_requirement_engine_with_new_service(self):
-        from packages.services.registry.registry import ServiceRegistry
         from packages.documents.requirement_engine import DocumentRequirementEngine
+        from packages.services.registry.registry import ServiceRegistry
 
         class MockPassportAdapter(GovernmentServiceAdapter):
             def metadata(self):
@@ -202,9 +208,14 @@ class TestServiceExtensibility:
 
     @pytest.mark.asyncio
     async def test_full_pipeline_with_new_service(self):
-        from packages.services.registry.registry import ServiceRegistry
         from packages.services.base.adapter import GovernmentServiceAdapter
-        from packages.services.base.models import ServiceMetadata, ServiceCapability, ServiceResponse, DocumentRequirement
+        from packages.services.base.models import (
+            DocumentRequirement,
+            ServiceCapability,
+            ServiceMetadata,
+            ServiceResponse,
+        )
+        from packages.services.registry.registry import ServiceRegistry
 
         class NewServiceAdapter(GovernmentServiceAdapter):
             def metadata(self):

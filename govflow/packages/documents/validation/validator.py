@@ -1,11 +1,13 @@
-from typing import List, Optional, Dict, Any
+from typing import Any, ClassVar
+
+from app.core.logging import get_logger
+
 from packages.documents.base.document_validator import DocumentValidator
 from packages.documents.base.models import (
-    ExtractedField,
     DocumentValidationResult,
+    ExtractedField,
     FieldSource,
 )
-from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -16,7 +18,7 @@ class DefaultDocumentValidator(DocumentValidator):
     Validates extracted fields based on document type requirements.
     """
 
-    REQUIRED_FIELDS: Dict[str, List[str]] = {
+    REQUIRED_FIELDS: ClassVar[dict[str, list[str]]] = {
         "identity_proof": ["name", "date_of_birth"],
         "address_proof": ["name", "address"],
         "income_proof": ["employee_name"],
@@ -24,7 +26,7 @@ class DefaultDocumentValidator(DocumentValidator):
         "passport": ["given_name", "surname", "date_of_birth"],
     }
 
-    FIELD_FORMATS: Dict[str, Dict[str, Any]] = {
+    FIELD_FORMATS: ClassVar[dict[str, dict[str, Any]]] = {
         "date_of_birth": {"pattern": r"^\d{4}-\d{2}-\d{2}$", "description": "YYYY-MM-DD format"},
         "date_of_issue": {"pattern": r"^\d{4}-\d{2}-\d{2}$", "description": "YYYY-MM-DD format"},
         "date_of_expiry": {"pattern": r"^\d{4}-\d{2}-\d{2}$", "description": "YYYY-MM-DD format"},
@@ -33,15 +35,15 @@ class DefaultDocumentValidator(DocumentValidator):
 
     async def validate(
         self,
-        extracted_fields: List[ExtractedField],
+        extracted_fields: list[ExtractedField],
         document_type: str,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> DocumentValidationResult:
         """Validate extracted fields against document type rules."""
-        errors: List[str] = []
-        warnings: List[str] = []
-        missing_fields: List[str] = []
-        field_formats: Dict[str, bool] = {}
+        errors: list[str] = []
+        warnings: list[str] = []
+        missing_fields: list[str] = []
+        field_formats: dict[str, bool] = {}
 
         fields_by_name = {f.field: f for f in extracted_fields}
 

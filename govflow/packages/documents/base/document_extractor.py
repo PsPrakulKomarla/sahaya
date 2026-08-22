@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import List, Optional, Dict, Any
-from packages.documents.base.models import OCRResult, ExtractedField
+from typing import Any
+
+from packages.documents.base.models import ExtractedField, OCRResult
 
 
 class DocumentExtractor(ABC):
@@ -14,8 +15,8 @@ class DocumentExtractor(ABC):
         self,
         ocr_result: OCRResult,
         document_type: str,
-        context: Optional[Dict[str, Any]] = None,
-    ) -> List[ExtractedField]:
+        context: dict[str, Any] | None = None,
+    ) -> list[ExtractedField]:
         """Extract structured fields from OCR result.
 
         Args:
@@ -26,9 +27,7 @@ class DocumentExtractor(ABC):
         Returns:
             List of ExtractedField with values and confidence scores.
         """
-        pass
 
     @abstractmethod
-    def supported_document_types(self) -> List[str]:
+    def supported_document_types(self) -> list[str]:
         """Return list of document types this extractor can handle."""
-        pass

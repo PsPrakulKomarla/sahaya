@@ -1,8 +1,8 @@
-from typing import Any
-
 from fastapi import APIRouter, Query
-from packages.services import ServiceResolver, get_registry
 from pydantic import BaseModel, Field
+from typing import Optional, List, Dict, Any
+from packages.services import get_registry, ServiceResolver
+from packages.services.base.models import ServiceCapability
 
 router = APIRouter(prefix="/services", tags=["services"])
 
@@ -14,29 +14,29 @@ class ServiceMetadataResponse(BaseModel):
     department: str
     jurisdiction: str
     official_portal: str
-    capabilities: list[str]
-    required_documents: list[dict[str, Any]]
+    capabilities: List[str]
+    required_documents: List[Dict[str, Any]]
     workflow_version: str
     enabled: bool
-    estimated_processing_time: str | None = None
-    fees: str | None = None
+    estimated_processing_time: Optional[str] = None
+    fees: Optional[str] = None
 
 
 class ServiceListResponse(BaseModel):
-    services: list[ServiceMetadataResponse]
+    services: List[ServiceMetadataResponse]
     total: int
 
 
 class ServiceResolveRequest(BaseModel):
     service_query: str = Field(..., description="Natural language query like 'income certificate'")
-    jurisdiction: str | None = Field(None, description="Optional jurisdiction filter")
-    capability: str | None = Field(None, description="Optional capability filter")
+    jurisdiction: Optional[str] = Field(None, description="Optional jurisdiction filter")
+    capability: Optional[str] = Field(None, description="Optional capability filter")
 
 
 class ServiceResolveResponse(BaseModel):
     success: bool
-    data: dict[str, Any] | None = None
-    error: dict[str, Any] | None = None
+    data: Optional[Dict[str, Any]] = None
+    error: Optional[Dict[str, Any]] = None
 
 
 class WorkflowPlanRequest(BaseModel):
@@ -45,8 +45,8 @@ class WorkflowPlanRequest(BaseModel):
 
 class WorkflowPlanResponse(BaseModel):
     success: bool
-    data: dict[str, Any] | None = None
-    error: dict[str, Any] | None = None
+    data: Optional[Dict[str, Any]] = None
+    error: Optional[Dict[str, Any]] = None
 
 
 @router.get("", response_model=ServiceListResponse)

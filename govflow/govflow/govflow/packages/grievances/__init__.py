@@ -1,0 +1,1 @@
+"""Grievance system package — placeholder for a later phase (Phase 0)."""

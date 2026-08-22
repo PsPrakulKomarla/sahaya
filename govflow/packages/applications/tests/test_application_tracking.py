@@ -1,7 +1,8 @@
 import os
 import sys
-import pytest
 import uuid
+
+import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
@@ -125,8 +126,10 @@ class TestApplicationService:
 
 class TestApplicationSubmit:
     def setup_method(self):
+        from packages.services.adapters.income_certificate.adapter import (
+            MockIncomeCertificateAdapter,
+        )
         from packages.services.registry.registry import ServiceRegistry
-        from packages.services.adapters.income_certificate.adapter import MockIncomeCertificateAdapter
 
         self.registry = ServiceRegistry()
         self.registry.register_service(MockIncomeCertificateAdapter())

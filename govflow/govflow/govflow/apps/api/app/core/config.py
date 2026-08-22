@@ -1,6 +1,6 @@
 from functools import lru_cache
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List
 
 
 class Settings(BaseSettings):
@@ -31,9 +31,9 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    CORS_ORIGINS: List[str] = ["http://localhost:3000"]
+    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
 
-    OCR_LANGUAGES: List[str] = ["en", "kn", "hi"]
+    OCR_LANGUAGES: list[str] = ["en", "kn", "hi"]
     OCR_CONFIDENCE_THRESHOLD: float = 0.8
 
     PLAYWRIGHT_BROWSER: str = "chromium"

@@ -1,3 +1,3 @@
-from packages.browser.mock.agent import MockBrowserAgent
+from packages.browser.mock.mock_agent import MockBrowserAgent
 
 __all__ = ["MockBrowserAgent"]

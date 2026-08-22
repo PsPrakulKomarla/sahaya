@@ -1,9 +1,10 @@
-from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
+from typing import Any
 
-from packages.applications.tracking_adapter import TrackingAdapter
-from packages.applications.application_service import STATUS_NORMALIZATION
 from app.core.logging import get_logger
+
+from packages.applications.application_service import STATUS_NORMALIZATION
+from packages.applications.tracking_adapter import TrackingAdapter
 
 logger = get_logger(__name__)
 
@@ -12,19 +13,19 @@ class ApplicationTrackingService:
     """Tracks application status across government portals."""
 
     def __init__(self):
-        self._adapters: Dict[str, TrackingAdapter] = {}
+        self._adapters: dict[str, TrackingAdapter] = {}
 
     def register_adapter(self, service_id: str, adapter: TrackingAdapter) -> None:
         self._adapters[service_id] = adapter
         logger.info("tracking_adapter_registered", service_id=service_id)
 
-    def get_adapter(self, service_id: str) -> Optional[TrackingAdapter]:
+    def get_adapter(self, service_id: str) -> TrackingAdapter | None:
         return self._adapters.get(service_id)
 
     async def track_application(
         self,
-        application: Dict[str, Any],
-    ) -> Dict[str, Any]:
+        application: dict[str, Any],
+    ) -> dict[str, Any]:
         service_id = application.get("service_id", "")
         reference_number = application.get("reference_number", "")
 
@@ -48,7 +49,7 @@ class ApplicationTrackingService:
             previous_status = application.get("status")
             status_changed = previous_status != normalized_status
 
-            timeline_events: List[Dict[str, Any]] = []
+            timeline_events: list[dict[str, Any]] = []
             if status_changed:
                 event = {
                     "event_type": "STATUS_CHANGED",
@@ -79,7 +80,7 @@ class ApplicationTrackingService:
                 "timeline_events": timeline_events,
             }
 
-        except Exception as e:
+        except (RuntimeError, ValueError, KeyError, TypeError, ConnectionError) as e:
             logger.error("tracking_error", application_id=application.get("id"), error=str(e))
             return {"success": False, "error": str(e)}
 
@@ -93,7 +94,7 @@ class ApplicationTrackingService:
         service_id: str,
         reference_number: str,
         interval_seconds: int = 3600,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         return {
             "job_id": f"track_{application_id}",
             "application_id": application_id,

@@ -1,0 +1,1 @@
+"""Audit logging package — placeholder for a later phase (Phase 0)."""

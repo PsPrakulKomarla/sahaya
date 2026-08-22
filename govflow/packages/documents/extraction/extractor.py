@@ -1,12 +1,14 @@
 import re
-from typing import List, Optional, Dict, Any
+from typing import Any, ClassVar
+
+from app.core.logging import get_logger
+
 from packages.documents.base.document_extractor import DocumentExtractor
 from packages.documents.base.models import (
-    OCRResult,
     ExtractedField,
     FieldSource,
+    OCRResult,
 )
-from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -18,7 +20,7 @@ class DefaultDocumentExtractor(DocumentExtractor):
     for common Indian document types.
     """
 
-    FIELD_PATTERNS: Dict[str, Dict[str, Any]] = {
+    FIELD_PATTERNS: ClassVar[dict[str, dict[str, Any]]] = {
         "identity_proof": {
             "name": r"(?:Name|Applicant|Holder)[\s:]+([A-Z][a-zA-Z\s]+)",
             "date_of_birth": r"(?:DOB|Date of Birth|Birth Date)[\s:]+(\d{2}[/-]\d{2}[/-]\d{4})",
@@ -56,15 +58,15 @@ class DefaultDocumentExtractor(DocumentExtractor):
         },
     }
 
-    def supported_document_types(self) -> List[str]:
+    def supported_document_types(self) -> list[str]:
         return list(self.FIELD_PATTERNS.keys())
 
     async def extract(
         self,
         ocr_result: OCRResult,
         document_type: str,
-        context: Optional[Dict[str, Any]] = None,
-    ) -> List[ExtractedField]:
+        context: dict[str, Any] | None = None,
+    ) -> list[ExtractedField]:
         """Extract fields from OCR text using pattern matching."""
         text = ocr_result.extracted_text
         patterns = self.FIELD_PATTERNS.get(document_type, {})
@@ -76,7 +78,7 @@ class DefaultDocumentExtractor(DocumentExtractor):
             )
             return self._extract_generic_fields(text, ocr_result.overall_confidence)
 
-        fields: List[ExtractedField] = []
+        fields: list[ExtractedField] = []
         for field_name, pattern in patterns.items():
             match = re.search(pattern, text, re.IGNORECASE | re.MULTILINE)
             if match:
@@ -125,9 +127,9 @@ class DefaultDocumentExtractor(DocumentExtractor):
                     return f"{year}-{month.zfill(2)}-{day.zfill(2)}"
         return date_str
 
-    def _extract_generic_fields(self, text: str, confidence: float) -> List[ExtractedField]:
+    def _extract_generic_fields(self, text: str, confidence: float) -> list[ExtractedField]:
         """Extract generic fields when no specific patterns exist."""
-        fields: List[ExtractedField] = []
+        fields: list[ExtractedField] = []
 
         name_match = re.search(r"(?:Name)[\s:]+([A-Z][a-zA-Z\s]+)", text, re.IGNORECASE)
         if name_match:

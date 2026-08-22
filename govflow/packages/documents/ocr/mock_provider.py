@@ -1,7 +1,5 @@
-import re
-from typing import Optional, List, Dict, Any
+from packages.documents.base.models import OCRPageResult, OCRResult
 from packages.documents.base.ocr_provider import OCRProvider
-from packages.documents.base.models import OCRResult, OCRPageResult, OCRBoundingBox
 
 
 class MockOCRProvider(OCRProvider):
@@ -12,19 +10,19 @@ class MockOCRProvider(OCRProvider):
     """
 
     def __init__(self):
-        self._mock_results: Dict[str, OCRResult] = {}
+        self._mock_results: dict[str, OCRResult] = {}
 
     def provider_name(self) -> str:
         return "mock_ocr"
 
-    def supported_languages(self) -> List[str]:
+    def supported_languages(self) -> list[str]:
         return ["en", "kn", "hi"]
 
     def set_mock_result(self, file_name: str, result: OCRResult) -> None:
         """Set a mock OCR result for a specific file name."""
         self._mock_results[file_name] = result
 
-    async def process(self, file_path: str, language: Optional[str] = None) -> OCRResult:
+    async def process(self, file_path: str, language: str | None = None) -> OCRResult:
         """Process a document using mock OCR.
 
         Returns simulated OCR output based on file name patterns.
@@ -47,7 +45,7 @@ class MockOCRProvider(OCRProvider):
         else:
             return self._mock_generic_document(file_name, language)
 
-    def _mock_identity_document(self, file_name: str, language: Optional[str] = None) -> OCRResult:
+    def _mock_identity_document(self, file_name: str, language: str | None = None) -> OCRResult:
         text = (
             "Name: Ravi Kumar\n"
             "Date of Birth: 12/04/2000\n"
@@ -70,7 +68,7 @@ class MockOCRProvider(OCRProvider):
             metadata={"document_category": "identity"},
         )
 
-    def _mock_address_proof(self, file_name: str, language: Optional[str] = None) -> OCRResult:
+    def _mock_address_proof(self, file_name: str, language: str | None = None) -> OCRResult:
         text = (
             "ELECTRICITY BILL\n"
             "Consumer Number: 1234567890\n"
@@ -94,7 +92,7 @@ class MockOCRProvider(OCRProvider):
             metadata={"document_category": "address"},
         )
 
-    def _mock_income_proof(self, file_name: str, language: Optional[str] = None) -> OCRResult:
+    def _mock_income_proof(self, file_name: str, language: str | None = None) -> OCRResult:
         text = (
             "SALARY SLIP\n"
             "Employee Name: Ravi Kumar\n"
@@ -119,7 +117,7 @@ class MockOCRProvider(OCRProvider):
             metadata={"document_category": "income"},
         )
 
-    def _mock_birth_certificate(self, file_name: str, language: Optional[str] = None) -> OCRResult:
+    def _mock_birth_certificate(self, file_name: str, language: str | None = None) -> OCRResult:
         text = (
             "BIRTH CERTIFICATE\n"
             "Child Name: Ravi Kumar\n"
@@ -143,7 +141,7 @@ class MockOCRProvider(OCRProvider):
             metadata={"document_category": "birth"},
         )
 
-    def _mock_passport(self, file_name: str, language: Optional[str] = None) -> OCRResult:
+    def _mock_passport(self, file_name: str, language: str | None = None) -> OCRResult:
         text = (
             "REPUBLIC OF INDIA\n"
             "PASSPORT\n"
@@ -169,7 +167,7 @@ class MockOCRProvider(OCRProvider):
             metadata={"document_category": "passport"},
         )
 
-    def _mock_generic_document(self, file_name: str, language: Optional[str] = None) -> OCRResult:
+    def _mock_generic_document(self, file_name: str, language: str | None = None) -> OCRResult:
         text = f"Document: {file_name}\nContent: Generic document text\n"
         return OCRResult(
             extracted_text=text,
