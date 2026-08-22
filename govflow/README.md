@@ -18,7 +18,10 @@ govflow/
 │   ├── ai/                  # AI providers, prompts, structured output
 │   ├── i18n/                # Multilingual support (en, kn, hi)
 │   ├── security/            # Security utilities
-│   └── shared/              # Shared utilities
+│   ├── shared/              # Shared utilities
+│   ├── applications/        # Application tracking (Phase 0 placeholder)
+│   ├── grievances/          # Grievance system (Phase 0 placeholder)
+│   └── audit/               # Audit logging (Phase 0 placeholder)
 ├── workers/
 │   ├── agent_worker/        # Background agent tasks
 │   └── status_worker/       # Application status polling
@@ -33,7 +36,7 @@ govflow/
 ### Prerequisites
 
 - Node.js 20+
-- Python 3.11+
+- Python 3.12+
 - PostgreSQL 16+
 - Redis 7+
 - Docker (optional, for local services)
@@ -105,6 +108,9 @@ npm run db:studio     # Open Prisma Studio
 - **JWT** authentication
 - **Structured logging** with structlog
 - **pytest** for testing
+- **Ruff** for linting and formatting
+- **mypy** for type checking
+- **Redis abstraction** (`app/core/redis.py`) with JSON helpers
 
 #### Shared Types
 

@@ -1,0 +1,1 @@
+"""Application tracking package — placeholder for a later phase (Phase 0)."""

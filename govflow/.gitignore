@@ -45,3 +45,8 @@ npm-debug.log*
 
 # Docker
 docker-compose.override.yml
+
+# Python tooling caches
+.ruff_cache/
+.coverage
+htmlcov/
