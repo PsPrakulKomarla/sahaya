@@ -2,16 +2,18 @@ import asyncio
 import pathlib
 import sys
 from logging.config import fileConfig
+
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
+
 from alembic import context
 
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.append(str(PROJECT_ROOT))
 
-from app.core.config import settings
-from app.core.database import Base
+from app.core.config import settings  # noqa: E402
+from app.core.database import Base  # noqa: E402
 
 config = context.config
 

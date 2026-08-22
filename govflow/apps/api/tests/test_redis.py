@@ -1,6 +1,6 @@
 """Tests for the Redis abstraction layer."""
+
 import json
-from typing import Tuple
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -9,7 +9,7 @@ from app.core.redis import RedisClient
 
 
 @pytest.fixture
-def stub() -> Tuple[RedisClient, MagicMock]:
+def stub() -> tuple[RedisClient, MagicMock]:
     """A RedisClient whose transport is stubbed with a MagicMock."""
     client = RedisClient(url="redis://localhost:6379/0")
     backend: MagicMock = MagicMock()
@@ -19,7 +19,7 @@ def stub() -> Tuple[RedisClient, MagicMock]:
 
 
 @pytest.mark.asyncio
-async def test_ping_healthy(stub: Tuple[RedisClient, MagicMock]) -> None:
+async def test_ping_healthy(stub: tuple[RedisClient, MagicMock]) -> None:
     client, backend = stub
     backend.ping = AsyncMock(return_value=True)
     assert await client.ping() is True
@@ -27,14 +27,14 @@ async def test_ping_healthy(stub: Tuple[RedisClient, MagicMock]) -> None:
 
 
 @pytest.mark.asyncio
-async def test_ping_unreachable(stub: Tuple[RedisClient, MagicMock]) -> None:
+async def test_ping_unreachable(stub: tuple[RedisClient, MagicMock]) -> None:
     client, backend = stub
     backend.ping = AsyncMock(side_effect=ConnectionError("down"))
     assert await client.ping() is False
 
 
 @pytest.mark.asyncio
-async def test_json_roundtrip(stub: Tuple[RedisClient, MagicMock]) -> None:
+async def test_json_roundtrip(stub: tuple[RedisClient, MagicMock]) -> None:
     client, backend = stub
     payload = {"items": [1, 2], "ok": True}
     backend.set = AsyncMock(return_value=True)
@@ -46,14 +46,14 @@ async def test_json_roundtrip(stub: Tuple[RedisClient, MagicMock]) -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_json_missing(stub: Tuple[RedisClient, MagicMock]) -> None:
+async def test_get_json_missing(stub: tuple[RedisClient, MagicMock]) -> None:
     client, backend = stub
     backend.get = AsyncMock(return_value=None)
     assert await client.get_json("missing:key") is None
 
 
 @pytest.mark.asyncio
-async def test_delete_and_exists(stub: Tuple[RedisClient, MagicMock]) -> None:
+async def test_delete_and_exists(stub: tuple[RedisClient, MagicMock]) -> None:
     client, backend = stub
     backend.delete = AsyncMock(return_value=1)
     backend.exists = AsyncMock(return_value=1)
@@ -63,7 +63,7 @@ async def test_delete_and_exists(stub: Tuple[RedisClient, MagicMock]) -> None:
 
 
 @pytest.mark.asyncio
-async def test_close(stub: Tuple[RedisClient, MagicMock]) -> None:
+async def test_close(stub: tuple[RedisClient, MagicMock]) -> None:
     client, backend = stub
     await client.close()
     backend.aclose.assert_awaited_once()

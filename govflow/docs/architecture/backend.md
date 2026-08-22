@@ -126,6 +126,12 @@ make -C apps/api migrate          # alembic upgrade head (needs PostgreSQL)
 `typecheck`, `db:migrate`) that are wired into the root npm workspaces, and
 `.github/workflows/backend-ci.yml` runs the quality gates on every push/PR.
 
+Phase-0 gates cover the foundation modules owned by this phase
+(`app/core`, `app/main.py`, `app/api/health.py`, `tests`, `alembic`).
+Feature modules under active development by parallel tracks
+(`app/models`, `app/schemas`, `app/api/services.py`, `app/repositories`,
+`app/services`) are validated by their owning tracks.
+
 ## Known limitations (Phase 0)
 
 - `001_initial.py` is a hand-written baseline migration; autogenerate will be

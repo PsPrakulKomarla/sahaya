@@ -1,7 +1,9 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, Text, Float, ForeignKey, Integer
+
+from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID
+
 from app.core.database import Base
 
 
@@ -35,13 +37,17 @@ class Document(Base):
     __tablename__ = "documents"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     document_type = Column(String(50), nullable=False, index=True)
     file_name = Column(String(255), nullable=False)
     storage_reference = Column(String(500), nullable=False)
     mime_type = Column(String(100), nullable=False)
     file_size = Column(Integer, nullable=False)
-    verification_status = Column(String(20), default=DocumentStatus.PENDING, nullable=False, index=True)
+    verification_status = Column(
+        String(20), default=DocumentStatus.PENDING, nullable=False, index=True
+    )
     ocr_status = Column(String(20), default=OcrStatus.NOT_PROCESSED, nullable=False)
     ocr_confidence = Column(Float, nullable=True)
     extracted_data = Column(JSONB, default=dict, nullable=True)
@@ -50,7 +56,9 @@ class Document(Base):
     verified_at = Column(DateTime(timezone=True), nullable=True)
     expires_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     def to_dict(self) -> dict:
         return {

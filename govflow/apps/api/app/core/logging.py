@@ -1,13 +1,16 @@
-import structlog
 import logging
 import sys
+from typing import Any, cast
+
+import structlog
+
 from app.core.config import settings
 
 
 def configure_logging() -> None:
     timestamper = structlog.processors.TimeStamper(fmt="iso")
 
-    shared_processors = [
+    shared_processors: list[Any] = [
         structlog.contextvars.merge_contextvars,
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,
@@ -39,4 +42,4 @@ def configure_logging() -> None:
 
 
 def get_logger(name: str) -> structlog.BoundLogger:
-    return structlog.get_logger(name)
+    return cast(structlog.BoundLogger, structlog.get_logger(name))

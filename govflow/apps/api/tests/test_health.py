@@ -1,4 +1,5 @@
 """Tests for the health endpoints."""
+
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 

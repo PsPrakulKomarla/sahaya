@@ -1,4 +1,5 @@
 """Shared pytest fixtures and environment isolation for the API test suite."""
+
 import os
 
 # Applied before the application modules are imported so the settings

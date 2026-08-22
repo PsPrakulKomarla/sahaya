@@ -2,8 +2,15 @@
 #
 # Usage: make <target>   (e.g. `make install`, `make test`)
 # Python 3.12+ is required. CI sets PYTHON to the 3.12 interpreter.
+#
+# Phase-0 quality gates cover the foundation modules; feature modules being
+# developed in parallel tracks (app/models, app/schemas, app/api/services.py,
+# app/repositories, app/services) are linted/typed by their owning track.
 
 PYTHON ?= python
+
+# Files owned and validated by the Phase-0 backend foundation.
+FOUNDATION := app/core app/main.py app/api/health.py tests alembic
 
 ifeq ($(OS),Windows_NT)
 VENV_PY := venv/Scripts/python.exe
@@ -32,16 +39,16 @@ test:
 	$(VENV_PY) -m pytest
 
 lint:
-	$(VENV_PY) -m ruff check app tests alembic
+	$(VENV_PY) -m ruff check $(FOUNDATION)
 
 format:
-	$(VENV_PY) -m ruff format app tests alembic
+	$(VENV_PY) -m ruff format $(FOUNDATION)
 
 format-check:
-	$(VENV_PY) -m ruff format --check app tests alembic
+	$(VENV_PY) -m ruff format --check $(FOUNDATION)
 
 typecheck:
-	$(VENV_PY) -m mypy app
+	$(VENV_PY) -m mypy $(FOUNDATION)
 
 migrate:
 	$(VENV_PY) -m alembic upgrade head

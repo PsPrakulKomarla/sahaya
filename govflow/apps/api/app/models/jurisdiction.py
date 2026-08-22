@@ -1,7 +1,9 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, Boolean, Text
+
+from sqlalchemy import Boolean, Column, DateTime, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID
+
 from app.core.database import Base
 
 
@@ -19,7 +21,9 @@ class Jurisdiction(Base):
     is_active = Column(Boolean, default=True, nullable=False)
     metadata_extra = Column(JSONB, default=dict, nullable=False)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     def to_dict(self) -> dict:
         return {

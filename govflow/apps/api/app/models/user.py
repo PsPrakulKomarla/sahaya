@@ -1,12 +1,14 @@
 import uuid
 from datetime import datetime
-from enum import Enum
-from sqlalchemy import Column, String, DateTime, Boolean, Text
+from enum import Enum, StrEnum
+
+from sqlalchemy import Boolean, Column, DateTime, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID
+
 from app.core.database import Base
 
 
-class UserRole(str, Enum):
+class UserRole(StrEnum):
     CITIZEN = "citizen"
     ADMIN = "admin"
     SUPPORT = "support"
@@ -30,7 +32,9 @@ class User(Base):
     profile = Column(JSONB, default=dict, nullable=False)
     last_login_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     def to_dict(self) -> dict:
         return {

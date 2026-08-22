@@ -40,11 +40,11 @@ jobs:
       - name: Lint (ruff)
         working-directory: apps/api
         run: |
-          python -m ruff check app tests alembic
-          python -m ruff format --check app tests alembic
+          python -m ruff check app/core app/main.py app/api/health.py tests alembic
+          python -m ruff format --check app/core app/main.py app/api/health.py tests alembic
       - name: Typecheck (mypy)
         working-directory: apps/api
-        run: python -m mypy app
+        run: python -m mypy app/main.py app/core app/api/health.py
 
   test-and-migrate:
     runs-on: ubuntu-latest

@@ -1,7 +1,9 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, Boolean, Text, Float, ForeignKey
+
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
+
 from app.core.database import Base
 
 
@@ -24,7 +26,9 @@ class Service(Base):
     display_name = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
     department = Column(String(255), nullable=False)
-    jurisdiction_id = Column(UUID(as_uuid=True), ForeignKey("jurisdictions.id"), nullable=True, index=True)
+    jurisdiction_id = Column(
+        UUID(as_uuid=True), ForeignKey("jurisdictions.id"), nullable=True, index=True
+    )
     official_portal = Column(String(500), nullable=False)
     supported_languages = Column(JSONB, default=["en"], nullable=False)
     capabilities = Column(JSONB, nullable=False, default=list)
@@ -37,7 +41,9 @@ class Service(Base):
     contact_info = Column(JSONB, default=dict, nullable=True)
     last_verified_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     def to_dict(self) -> dict:
         return {
@@ -57,7 +63,9 @@ class Service(Base):
             "estimated_processing_time": self.estimated_processing_time,
             "fees": self.fees,
             "contact_info": self.contact_info,
-            "last_verified_at": self.last_verified_at.isoformat() if self.last_verified_at else None,
+            "last_verified_at": self.last_verified_at.isoformat()
+            if self.last_verified_at
+            else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

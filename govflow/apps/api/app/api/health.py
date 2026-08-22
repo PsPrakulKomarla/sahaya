@@ -3,8 +3,9 @@
 The router is mounted both at the root (``/health``) and under the API
 version prefix (``/api/v1/health``) so probes can use either path.
 """
+
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends
@@ -26,7 +27,7 @@ def _service_info() -> dict[str, Any]:
         "service": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "environment": settings.ENVIRONMENT,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 

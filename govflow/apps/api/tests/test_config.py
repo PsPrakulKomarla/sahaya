@@ -1,4 +1,5 @@
 """Tests for application configuration defaults."""
+
 from app.core.config import settings
 
 
