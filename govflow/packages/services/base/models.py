@@ -56,6 +56,7 @@ class ServiceMetadata(BaseModel):
     supported_languages: List[str] = Field(default_factory=lambda: ["en"])
     capabilities: List[ServiceCapability] = Field(default_factory=list)
     required_documents: List[DocumentRequirement] = Field(default_factory=list)
+    aliases: List[str] = Field(default_factory=list)
     workflow_version: str = "1.0.0"
     enabled: bool = True
     last_verified: Optional[datetime] = None

@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from enum import Enum, StrEnum
+from enum import Enum
 
 from sqlalchemy import Boolean, Column, DateTime, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -8,7 +8,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from app.core.database import Base
 
 
-class UserRole(StrEnum):
+class UserRole(str, Enum):
     CITIZEN = "citizen"
     ADMIN = "admin"
     SUPPORT = "support"

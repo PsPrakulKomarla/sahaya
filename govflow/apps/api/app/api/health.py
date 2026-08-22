@@ -5,8 +5,8 @@ version prefix (``/api/v1/health``) so probes can use either path.
 """
 
 import time
-from datetime import UTC, datetime
-from typing import Any
+from datetime import datetime, timezone
+from typing import Any, Dict
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import text
@@ -21,24 +21,24 @@ router = APIRouter(tags=["health"])
 logger = get_logger(__name__)
 
 
-def _service_info() -> dict[str, Any]:
+def _service_info() -> Dict[str, Any]:
     """Base payload shared across health endpoints."""
     return {
         "service": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "environment": settings.ENVIRONMENT,
-        "timestamp": datetime.now(UTC).isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
 @router.get("/health")
-async def health_check() -> dict[str, Any]:
+async def health_check() -> Dict[str, Any]:
     """Basic health: the process is up and carries service metadata."""
     return {"status": "healthy", **_service_info()}
 
 
 @router.get("/health/live")
-async def liveness_check() -> dict[str, Any]:
+async def liveness_check() -> Dict[str, Any]:
     """Liveness probe — no external dependencies are touched."""
     return {"status": "alive", **_service_info()}
 
@@ -47,7 +47,7 @@ async def liveness_check() -> dict[str, Any]:
 async def readiness_check(
     db: AsyncSession = Depends(get_db),
     redis_client: RedisClient = Depends(get_redis),
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     """Readiness probe: verifies PostgreSQL and Redis are reachable."""
     try:
         await db.execute(text("SELECT 1"))
@@ -70,9 +70,9 @@ async def readiness_check(
 async def detailed_health_check(
     db: AsyncSession = Depends(get_db),
     redis_client: RedisClient = Depends(get_redis),
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     """Per-dependency health report with latency measurements."""
-    services: dict[str, Any] = {}
+    services: Dict[str, Any] = {}
 
     database_status = "healthy"
     start = time.perf_counter()

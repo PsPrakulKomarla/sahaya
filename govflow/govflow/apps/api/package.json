@@ -1,0 +1,17 @@
+{
+  "name": "@govflow/api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GovFlow AI Backend API (FastAPI)",
+  "scripts": {
+    "dev": "venv\\Scripts\\python.exe -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
+    "start": "venv\\Scripts\\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8000",
+    "test": "venv\\Scripts\\python.exe -m pytest",
+    "lint": "venv\\Scripts\\python.exe -m ruff check app\\core app\\main.py app\\api\\health.py tests alembic && venv\\Scripts\\python.exe -m ruff format --check app\\core app\\main.py app\\api\\health.py tests alembic",
+    "format": "venv\\Scripts\\python.exe -m ruff format app\\core app\\main.py app\\api\\health.py tests alembic",
+    "typecheck": "venv\\Scripts\\python.exe -m mypy app\\main.py app\\core app\\api\\health.py",
+    "install:dev": "venv\\Scripts\\python.exe -m pip install -e \".[dev]\"",
+    "db:migrate": "venv\\Scripts\\python.exe -m alembic upgrade head",
+    "db:generate": "venv\\Scripts\\python.exe -m alembic revision --autogenerate -m \"Auto migration\""
+  }
+}
